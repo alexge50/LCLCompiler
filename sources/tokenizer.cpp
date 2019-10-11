@@ -10,31 +10,6 @@
 
 namespace lcl
 {
-    [[nodiscard]] constexpr bool token::is_comment() const noexcept 
-    {
-        return type == token_type::comment;
-    }
-
-    [[nodiscard]] constexpr bool token::is_multi_line_comment() const noexcept
-    {
-        return is_comment() && source_code.substr(0, 2) == "/*";
-    }
-
-    [[nodiscard]] constexpr bool token::is_single_line_comment() const noexcept 
-    {
-        return is_comment() && source_code.substr(0, 2) == "//";
-    }
-
-    [[nodiscard]] bool is_valid_first_character_in_word(const char it) noexcept
-    {
-        return ascii::is_ascii_letter(it) || it == '_';
-    }
-
-    [[nodiscard]] bool is_valid_mid_character_in_word(const char it) noexcept
-    {
-        return ascii::is_ascii_letter(it) || ascii::is_digit(it) || it == '_';
-    }
-
     class tokenizer
     {
         std::vector<token>               tokens;
@@ -114,7 +89,7 @@ namespace lcl
             {
                 //Compiler error: String Literal didn't end with a '"'
                 //@Temporary
-                assert(!"compiler error: String Literal didn't end with a '\"'.");
+                assert(!"Compiler error: String Literal didn't end with a '\"'.");
             }
 
             return token { token_type::string_literal, make_string_view(string_literal_begin, string_literal_end) };
@@ -146,7 +121,7 @@ namespace lcl
             return token { token_type::word, make_string_view(word_begin, word_end) };
         }
 
-        [[nodiscard]] bool add_token(const std::optional<token>& tk)
+        [[nodiscard]] bool try_add_token(const std::optional<token>& tk)
         {
             if (!tk) return false;
 
@@ -169,11 +144,11 @@ namespace lcl
                 if (consume_white_space()) continue;
 
                 //If the token was added successfully we 'continue' in order to consume white space again
-                if (add_token(try_tokenize_newline()))             continue;
-                if (add_token(try_tokenize_single_line_comment())) continue;
-                if (add_token(try_tokenize_multi_line_comment()))  continue;
-                if (add_token(try_tokenize_string_literal()))      continue;
-                if (add_token(try_tokenize_integer_literal()))     continue;
+                if (try_add_token(try_tokenize_newline()))             continue;
+                if (try_add_token(try_tokenize_single_line_comment())) continue;
+                if (try_add_token(try_tokenize_multi_line_comment()))  continue;
+                if (try_add_token(try_tokenize_string_literal()))      continue;
+                if (try_add_token(try_tokenize_integer_literal()))     continue;
 
                 assert(!"Nothing to tokenize, AHHHHH");
             }

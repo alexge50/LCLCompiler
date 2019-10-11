@@ -1,3 +1,4 @@
 .vscode/
 bin/
 test_bin/
+fmt_bin/

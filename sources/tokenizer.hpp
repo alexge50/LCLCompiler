@@ -61,13 +61,31 @@ namespace lcl
         constexpr token(const token_type type, const std::string_view& source_code_of_token) :
         type(type), source_code(source_code_of_token) {}
 
-        [[nodiscard]] constexpr bool is_comment() const noexcept;
-        [[nodiscard]] constexpr bool is_multi_line_comment() const noexcept;
-        [[nodiscard]] constexpr bool is_single_line_comment() const noexcept;
+        [[nodiscard]] constexpr bool is_comment() const noexcept
+        {
+            return type == token_type::comment;
+        }
+
+        [[nodiscard]] constexpr bool is_multi_line_comment() const noexcept
+        {
+            return is_comment() && source_code.substr(0, 2) == "/*";
+        }
+
+        [[nodiscard]] constexpr bool is_single_line_comment() const noexcept
+        {
+            return is_comment() && source_code.substr(0, 2) == "//";
+        }
     };
 
-    [[nodiscard]] constexpr bool is_valid_first_character_in_identifier(char it) noexcept;
-    [[nodiscard]] constexpr bool is_valid_mid_in_character_identifier(char it) noexcept;
+    [[nodiscard]] constexpr bool is_valid_first_character_in_word(const char it) noexcept
+    {
+        return ascii::is_ascii_letter(it) || it == '_';
+    }
+
+    [[nodiscard]] constexpr bool is_valid_mid_character_in_word(const char it) noexcept
+    {
+        return ascii::is_ascii_letter(it) || ascii::is_digit(it) || it == '_';
+    }
 
     [[nodiscard]] std::vector<token> get_tokens_of_source_code(const std::string_view& source_code);
 }
