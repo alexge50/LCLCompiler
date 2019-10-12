@@ -2,41 +2,60 @@
 #define LCLCOMPILER_ALLOCATORS_HPP
 
 #include <cstddef>
+#include <cassert>
 
 namespace lcl::memory
 {
-    [[nodiscard]] void* reserve_memory_block(const size_t size);
-    
-    [[nodiscard]] bool commit_memory_block   (const void* block_begin, const size_t size_to_commit);
-    [[nodiscard]] bool decommit_memory_block (const void* block_begin, const size_t size_to_uncommit);
-    [[nodiscard]] bool unreserve_memory_block(const void* block_begin, const size_t size_to_unreserve);
 
-    class contiguous_virtual_arena
+    [[nodiscard]] constexpr bool support_for_huge_pages()
     {
-        const size_t m_reserved;
-        size_t       m_committed = 0;
-        std::byte*   m_base      = nullptr;
+        return false;
+    }
+
+    [[nodiscard]] size_t     get_page_size();
+    [[nodiscard]] std::byte* reserve_memory_pages(const size_t pages_to_reserve);
+    
+    void commit_memory_pages   (const void* base_address, const size_t pages_to_commit);
+    void decommit_memory_pages (const void* base_address, const size_t pages_to_uncommit);
+    void unreserve_memory_pages(const void* base_address, const size_t pages_to_unreserve);
+
+    class contiguous_virtual_memory_arena
+    {
+        const size_t m_reserved_pages;
+        size_t       m_committed_pages = 0;
+        std::byte*   m_base            = nullptr;
 
         public:
-        explicit contiguous_virtual_arena(const size_t amount_to_reserve) : m_reserved(amount_to_reserve)
+        explicit contiguous_virtual_memory_arena(const size_t pages_to_reserve) : m_reserved_pages(pages_to_reserve)
         {
-            //Empty
+            m_base = reserve_memory_pages(m_reserved_pages);
         }
 
-        private: 
+        private:
         [[nodiscard]] std::byte* address_to_commit_from() const noexcept
         {
-            return m_base + m_committed;
+            return m_base + committed_bytes();
         }
 
-        [[nodiscard]] size_t reserved_amount() const noexcept
+        public:
+        [[nodiscard]] size_t reserved_pages() const noexcept 
         {
-            return m_reserved;
+            return m_reserved_pages;
         }
 
-        [[nodiscard]] size_t committed_amount() const noexcept 
+        [[nodiscard]] size_t reserved_bytes() const noexcept
         {
-            return m_committed;
+            return m_reserved_pages * get_page_size();
+        }
+
+        [[nodiscard]] size_t committed_pages() const noexcept 
+        {
+            return m_committed_pages;
+        }
+
+        [[nodiscard]] size_t committed_bytes() const noexcept 
+        {
+            return m_committed_pages * get_page_size();
         }
 
         [[nodiscard]] std::byte* base_pointer() const noexcept 
@@ -44,9 +63,16 @@ namespace lcl::memory
             return m_base;
         }
 
-        [[nodiscard]] void commit_memory(const size_t amount) const 
+        [[nodiscard]] void commit_memory(const size_t pages_to_commit) 
         {
-            commit_memory_block(address_to_commit_from(), amount);
+            commit_memory_pages(address_to_commit_from(), pages_to_commit);
+
+            m_committed_pages += pages_to_commit;
+        }
+
+        ~contiguous_virtual_memory_arena()
+        {
+            unreserve_memory_pages(m_base, m_reserved_pages);
         }
     };
 
@@ -109,19 +135,22 @@ namespace lcl::memory
         }
 
         // initialize elements of allocated storage p with value value
-        void construct (pointer p, const T& value) {
+        void construct (pointer p, const T& value) 
+        {
             // initialize memory with placement new
             new((void*)p)T(value);
         }
 
         // destroy elements of initialized storage p
-        void destroy (pointer p) {
+        void destroy (pointer p) 
+        {
             // destroy objects by calling their destructor
             p->~T();
         }
 
         // deallocate storage p of deleted elements
-        void deallocate (pointer p, size_type num) {
+        void deallocate (pointer p, size_type num) 
+        {
             // print message and deallocate memory with global delete
             std::cerr << "deallocate " << num << " element(s)"
                         << " of size " << sizeof(T)
@@ -132,17 +161,7 @@ namespace lcl::memory
         ~virtual_arena_allocator() noexcept = default;
     };
 
-    // return that all specializations of this allocator are interchangeable
-    template <class T1, class T2>
-    bool operator== (const MyAlloc<T1>&,
-                    const MyAlloc<T2>&) throw() {
-        return true;
-    }
-    template <class T1, class T2>
-    bool operator!= (const MyAlloc<T1>&,
-                    const MyAlloc<T2>&) throw() {
-        return false;
-    }
+    //@Todo: Implement operator== and operator!= for allocator 
 }
 
 #endif LCLCOMPILER_ALLOCATORS_HPP
