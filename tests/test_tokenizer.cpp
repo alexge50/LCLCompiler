@@ -41,7 +41,7 @@ void test_tokenization_of_single_line_comment()
 
 void test_tokenization_of_multi_line_comment()
 {
-    const auto source = "/* //Test漢語 \n\n\n */\""sv;
+    const auto source = "/* //Test漢語 /* inner comment */ \n\n\n */"sv;
     const auto result = lcl::get_tokens_of_source_code(source);
  
     assert(result.size() == 1);
@@ -52,6 +52,18 @@ void test_tokenization_of_multi_line_comment()
     assert(result[0].is_multi_line_comment());
 }
 
+void test_tokenization_of_string()
+{
+    const auto source = "\"Test\"\""sv;
+    const auto result = lcl::get_tokens_of_source_code(source);
+
+    assert(result.size() == 1);
+    assert(result[0].type               == lcl::token_type::string_literal);
+    assert(result[0].source_code.size() == source.size());
+    assert(result[0].source_code        == source);
+    assert(result[0].is_string_literal());
+}
+
 int main()
 {
     std::cout << "Running Tokenizer Tests\n";
@@ -60,6 +72,7 @@ int main()
     test_tokenization_of_newline();
     test_tokenization_of_single_line_comment();
     test_tokenization_of_multi_line_comment();
+    test_tokenization_of_string();
     
     std::cout << "Tokenizer tests run succesfully.";
 }

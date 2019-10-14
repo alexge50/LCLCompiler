@@ -7,7 +7,7 @@ set common_compiler_flag=/nologo /MT /MP /std:c++17 /Gm- /EHsc /EHa- /permissive
 if not exist tests_bin mkdir tests_bin
 pushd tests_bin
 
-cl %common_compiler_flag% /Fetokenizer_tests %include_directories% ../sources/tokenizer.cpp ../tests/test_tokenizer.cpp
+cl %common_compiler_flag% /Fe:tokenizer_tests %include_directories% ../sources/tokenizer.cpp ../tests/test_tokenizer.cpp
 
 popd
 

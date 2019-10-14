@@ -77,6 +77,11 @@ namespace lcl
         {
             return is_comment() && source_code.substr(0, 2) == "//";
         }
+
+        [[nodiscard]] constexpr bool is_string_literal() const noexcept 
+        {
+            return type == token_type::string_literal;
+        }
     };
 
     [[nodiscard]] constexpr bool is_valid_first_character_in_word(const char it) noexcept
