@@ -6,12 +6,6 @@
 
 namespace lcl::memory
 {
-
-    [[nodiscard]] constexpr bool support_for_huge_pages()
-    {
-        return false;
-    }
-
     [[nodiscard]] size_t     get_page_size();
     [[nodiscard]] std::byte* reserve_memory_pages(const size_t pages_to_reserve);
     
