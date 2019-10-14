@@ -82,8 +82,25 @@ namespace lcl
                 return std::nullopt;
             }
 
+            auto escaped_character = false;
+
             const auto string_literal_begin = iterator;
-            const auto string_literal_end   = std::find_if(iterator + 1, source_code.cend(), [](auto it) { return it == '"' || ascii::is_newline(it); });
+            const auto string_literal_end   = std::find_if(iterator + 1, source_code.cend(), [&escaped_character] (auto it) 
+            {
+                if (escaped_character)
+                {
+                    escaped_character = false;
+                    return ascii::is_newline(it);
+                }
+
+                if (it == '\\')
+                {
+                    escaped_character = true;
+                    return false;
+                }
+
+                return it == '"' || ascii::is_newline(it); 
+            });
 
             if (string_literal_end == source_code.cend() || *string_literal_end != '"')
             {
@@ -97,7 +114,7 @@ namespace lcl
 
         [[nodiscard]] std::optional<token> try_tokenize_integer_literal() const
         {
-            if (!std::isdigit(*iterator)) 
+            if (!ascii::is_digit(*iterator)) 
             {
                 return std::nullopt;
             }

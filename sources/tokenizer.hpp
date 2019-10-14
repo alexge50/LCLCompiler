@@ -4,6 +4,8 @@
 #include <vector>
 #include <string_view>
 
+#include "chars.hpp"
+
 namespace lcl
 {
     enum class token_type

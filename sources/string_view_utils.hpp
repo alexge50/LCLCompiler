@@ -3,12 +3,12 @@
 
 #include <string_view>
 
-[[nodiscard]] inline std::string_view make_string_view(const std::string_view::const_iterator begin, const std::size_t length) noexcept
+[[nodiscard]] constexpr std::string_view make_string_view(const std::string_view::const_iterator begin, const std::size_t length) noexcept
 {
     return std::string_view { &*begin, length };
 }
 
-[[nodiscard]] inline std::string_view make_string_view(const std::string_view::const_iterator begin, const std::string_view::const_iterator end) noexcept
+[[nodiscard]] constexpr std::string_view make_string_view(const std::string_view::const_iterator begin, const std::string_view::const_iterator end) noexcept
 {
     return std::string_view { &*begin, static_cast<std::size_t>(std::distance(begin, end)) };
 }
