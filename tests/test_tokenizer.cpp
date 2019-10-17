@@ -106,6 +106,18 @@ void test_tokenization_of_string()
     assert(result[0].is_string_literal());
 }
 
+void test_tokenization_of_integer()
+{
+    const auto source = "1801"sv;
+    const auto result = lcl::get_tokens_of_source_code(source);
+
+    assert(result.size() == 1);
+    assert(result[0].type               == lcl::token_type::integer_literal);
+    assert(result[0].source_code.size() == source.size());
+    assert(result[0].source_code        == source);
+    assert(result[0].is_int());
+}
+
 int main()
 {
     std::cout << "Running Tokenizer Tests\n";
@@ -115,6 +127,7 @@ int main()
     test_tokenization_of_single_line_comment();
     test_tokenization_of_multi_line_comment();
     test_tokenization_of_string();
+    test_tokenization_of_integer();
     
     std::cout << "Tokenizer tests run succesfully.";
 }
