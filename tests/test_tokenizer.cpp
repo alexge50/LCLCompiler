@@ -108,14 +108,33 @@ void test_tokenization_of_string()
 
 void test_tokenization_of_integer()
 {
-    const auto source = "1801"sv;
-    const auto result = lcl::get_tokens_of_source_code(source);
+    {
+        const auto source = "1801"sv;
+        const auto result = lcl::get_tokens_of_source_code(source);
 
-    assert(result.size() == 1);
-    assert(result[0].type               == lcl::token_type::integer_literal);
-    assert(result[0].source_code.size() == source.size());
-    assert(result[0].source_code        == source);
-    assert(result[0].is_int());
+        assert(result.size() == 1);
+        assert(result[0].type               == lcl::token_type::integer_literal);
+        assert(result[0].source_code.size() == source.size());
+        assert(result[0].source_code        == source);
+        assert(result[0].is_int());
+    }
+
+    {
+        const auto source = "1801 83274"sv;
+        const auto result = lcl::get_tokens_of_source_code(source);
+
+        assert(result.size() == 2);
+        
+        assert(result[0].type               == lcl::token_type::integer_literal);
+        assert(result[0].source_code.size() == "1801"sv.size());
+        assert(result[0].source_code        == "1801"sv);
+        assert(result[0].is_int());
+
+        assert(result[1].type               == lcl::token_type::integer_literal);
+        assert(result[1].source_code.size() == "83274"sv.size());
+        assert(result[1].source_code        == "83274"sv);
+        assert(result[1].is_int());
+    }
 }
 
 int main()
