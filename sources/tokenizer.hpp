@@ -48,7 +48,7 @@ namespace lcl
         tilde,                 // ~
         mod,                   // %
         hat,                   // ^
-        ampersand,             //&
+        ampersand,             // &
         pipe,                  // |
 
         backslash,             // \
@@ -60,8 +60,10 @@ namespace lcl
         const token_type       type;
         const std::string_view source_code;
 
-        constexpr token(const token_type type, const std::string_view& source_code_of_token) :
-        type(type), source_code(source_code_of_token) {}
+        constexpr token(const token_type type, const std::string_view& source_code_of_token) : type(type), source_code(source_code_of_token)
+        {
+            //Empty
+        }
 
         [[nodiscard]] constexpr bool is_comment() const noexcept
         {

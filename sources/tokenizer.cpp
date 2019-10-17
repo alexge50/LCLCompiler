@@ -4,7 +4,7 @@
 #include <cassert>
 #include <functional>
 
-#include "string_view_utils.hpp"
+#include "std_utils.hpp"
 #include "tokenizer.hpp"
 #include "chars.hpp"
 
@@ -29,17 +29,24 @@ namespace lcl
 
         [[nodiscard]] std::optional<token> try_tokenize_newline() const noexcept
         {
-            if (!ascii::is_newline(*iterator)) 
+            if (!ascii::is_newline(*iterator))
             {
                 return std::nullopt;
             }
 
-            return token { token_type::newline, make_string_view(iterator, 1) };
+            return token { token_type::newline, substring(iterator, 1) };
         }
 
         [[nodiscard]] std::optional<token> try_tokenize_single_line_comment() const
         {
-            if (make_string_view(iterator, 2) != "//") 
+            const auto first_2_chars = maybe_substring(iterator, source_code.cend(), 2);
+
+            if (!first_2_chars.has_value())
+            {
+                return std::nullopt;
+            }
+
+            if (*first_2_chars != "//")
             {
                 return std::nullopt;
             }
@@ -47,51 +54,55 @@ namespace lcl
             const auto comment_begin = iterator;
             const auto comment_end   = std::find_if(iterator, source_code.cend(), ascii::is_newline);
 
-            return token { token_type::comment, make_string_view(comment_begin, comment_end) };
+            return token { token_type::comment, substring(comment_begin, comment_end) };
         }
 
         [[nodiscard]] std::optional<token> try_tokenize_multi_line_comment() const
         {
-            if (make_string_view(iterator, 2) != "/*") 
+            if (substring(iterator, 2) != "/*") 
             {
                 return std::nullopt;
             }
 
-            const auto comment_begin              = iterator;
-            const auto source_since_comment_begin = make_string_view(comment_begin, source_code.cend);
-            const auto comment_end                = [&source_since_comment_begin]() -> std::string_view::const_iterator
+            const auto comment_begin   = iterator;
+            const auto code_to_look_at = substring(comment_begin + 2, source_code.cend());
+            const auto comment_end     = [&code_to_look_at] () -> std::string_view::const_iterator
             {
                 auto inner_comments_count = 0;
 
-                for (int i = 0; i < source_since_comment_begin.size() - 1; i++)
+                for (int i = 0; i < ssize(code_to_look_at) - 1; i++)
                 {
-                    const auto view_of_2_chars = make_string_view(source_since_comment_begin.cbegin() + i, source_since_comment_begin.cbegin() + i + 1);
+                    const auto view = substring(code_to_look_at.cbegin() + i, 2);
 
-                    if (view_of_2_chars == "/*")
+                    if (view == "/*")
                     {
                         inner_comments_count++;
+                        i++;
+                        continue;
                     }
 
-                    if (view_of_2_chars == "*/")
+                    if (view == "*/")
                     {
                         if (inner_comments_count == 0)
                         {
-                            return view_of_2_chars.cbegin() + 1;
+                            return view.cbegin();
                         }
 
                         inner_comments_count--;
+                        i++;
                     }
                 }
 
-                return source_since_comment_begin.cend();
+                return code_to_look_at.cend();
             }();
 
-            if (comment_end == source_since_comment_begin.cend()) 
+            if (comment_end == code_to_look_at.cend()) 
             {
-                assert(!"Comment was not closed.");
+                //@Temporary
+                assert(!"Error: Comment was not closed.");
             }
 
-            return token { token_type::comment, make_string_view(comment_begin, comment_end) };
+            return token { token_type::comment, substring(comment_begin, comment_end + 2) };
         }
 
         [[nodiscard]] std::optional<token> try_tokenize_string_literal() const
@@ -128,7 +139,7 @@ namespace lcl
                 assert(!"Compiler error: String Literal didn't end with a '\"'.");
             }
 
-            return token { token_type::string_literal, make_string_view(string_literal_begin, string_literal_end) };
+            return token { token_type::string_literal, substring(string_literal_begin, string_literal_end + 1) };
         }
 
         [[nodiscard]] std::optional<token> try_tokenize_integer_literal() const
@@ -139,9 +150,9 @@ namespace lcl
             }
 
             const auto integer_literal_begin = iterator;
-            const auto integer_literal_end   = std::find_if_not(iterator, source_code.cend(), std::isdigit);
+            const auto integer_literal_end   = std::find_if_not(iterator, source_code.cend(), ascii::is_digit);
 
-            return token { token_type::integer_literal, make_string_view(integer_literal_begin, integer_literal_end) };
+            return token { token_type::integer_literal, substring(integer_literal_begin, integer_literal_end) };
         }
 
         [[nodiscard]] std::optional<token> try_tokenize_word() const
@@ -154,7 +165,7 @@ namespace lcl
             const auto word_begin = iterator;
             const auto word_end   = std::find_if_not(iterator + 1, source_code.cend(), is_valid_mid_character_in_word);
 
-            return token { token_type::word, make_string_view(word_begin, word_end) };
+            return token { token_type::word, substring(word_begin, word_end) };
         }
 
         [[nodiscard]] bool try_add_token(const std::optional<token>& tk)

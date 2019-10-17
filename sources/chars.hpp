@@ -16,7 +16,7 @@ namespace lcl::ascii
     //@Incomplete
     [[nodiscard]] constexpr inline bool is_white_space(const char it) noexcept
     {
-        return it == ' ' || it == '\r';
+        return it == ' ' || it == '\r' || it == '\t';
     }
 
     //@Incomplete
