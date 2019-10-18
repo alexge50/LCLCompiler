@@ -31,7 +31,7 @@ namespace lcl
         star_equals,           // *=
         minus_equals,          // -=
         plus_equals,           // +=
-        slash_equals,          // /=
+        forward_slash_equals,  // /=
         mod_equals,            // %=
         shift_right_equals,    // >>=
         shift_left_equals,     // <<=
@@ -42,7 +42,7 @@ namespace lcl
         less_than,             // <
         greater_than,          // >
         star,                  // *
-        slash,                 // /
+        forward_slash,         // /
         plus,                  // +
         minus,                 // -
         tilde,                 // ~
@@ -51,7 +51,7 @@ namespace lcl
         ampersand,             // &
         pipe,                  // |
 
-        backslash,             // \
+        backward_slash,        // \
 
     };
 
