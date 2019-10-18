@@ -7,6 +7,6 @@ set common_compiler_flag=/nologo /MT /MP /std:c++17 /Gm- /Felcl /EHsc /EHa- /per
 if not exist bin mkdir bin
 pushd bin
 
-cl %common_compiler_flag% %include_directories% ../sources/*.cpp 
+cl %common_compiler_flag% %include_directories% ../sources/*.cpp ../external/fmt/*.cc
 
 popd

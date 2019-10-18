@@ -5,8 +5,6 @@
 #include "fmt/core.h"
 #include "fmt/format.h"
 
-#include <memoryapi.h>
-
 int main()
 {
     fmt::print("Hello, {}!", "world");

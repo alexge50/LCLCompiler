@@ -3,6 +3,7 @@
 #include <optional>
 #include <cassert>
 #include <functional>
+#include <cassert>
 
 #include "std_utils.hpp"
 #include "tokenizer.hpp"
@@ -19,22 +20,6 @@ namespace lcl
         [[nodiscard]] bool end_of_source() const noexcept
         {
             return iterator == source_code.cend();
-        }
-
-        [[nodiscard]] std::string_view::const_iterator get_iterator_after_consuming_whitespace_from(const std::string_view::const_iterator consume_white_space_from) const noexcept
-        {
-            //Find first character that is not a whitespace
-            return std::find_if_not(consume_white_space_from, source_code.cend(), ascii::is_white_space);
-        }
-
-        [[nodiscard]] std::optional<token> try_tokenize_newline() const noexcept
-        {
-            if (!ascii::is_newline(*iterator))
-            {
-                return std::nullopt;
-            }
-
-            return token { token_type::newline, substring(iterator, 1) };
         }
 
         [[nodiscard]] std::optional<token> try_tokenize_single_line_comment() const
@@ -187,32 +172,32 @@ namespace lcl
             this->source_code = source_code;
             this->iterator    = source_code.cbegin();
             
-            tokens.reserve(1000); //Note: This number is completely arbitrary
-
             while (!end_of_source())
             {
                 switch (*iterator)
                 {
-                    [[fallthrough]]
                     case ' ':
                     {
-                        if (auto after_whitespace_iterator = get_iterator_after_consuming_whitespace_from(iterator); after_whitespace_iterator != iterator)
-                        {
-                            iterator = after_whitespace_iterator;
-
-                            continue;
-                        }
+                        iterator = std::find_if_not(iterator, source_code.cend(), ascii::is_white_space);
+                        continue;
                     }
 
-                    [[fallthrough]]
                     case '\n':
                     {
+                        const auto newlines_end   = std::find_if_not(iterator, source_code.cend(), ascii::is_newline);
+                        const auto newlines_count = std::distance(iterator, newlines_end);
 
+                        for (int i = 0; i < newlines_count; i++)
+                        {
+                            tokens.emplace_back(token_type::newline, substring(iterator + i, 1));
+                        }
+
+                        iterator = newlines_end;
+
+                        continue;
                     }
                 }
 
-                //If the token was added successfully we 'continue' in order to consume white space again
-                if (try_add_token(try_tokenize_newline()))             continue;
                 if (try_add_token(try_tokenize_single_line_comment())) continue;
                 if (try_add_token(try_tokenize_multi_line_comment()))  continue;
                 if (try_add_token(try_tokenize_string_literal()))      continue;
