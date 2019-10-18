@@ -29,16 +29,18 @@ constexpr std::ptrdiff_t ssize(const T (&array)[N]) noexcept
     return std::string_view { &*begin, static_cast<std::size_t>(std::distance(begin, end)) };
 }
 
-[[nodiscard]] constexpr std::optional<std::string_view> maybe_substring(const std::string_view::const_iterator begin, const std::string_view::const_iterator end, const int n) noexcept
+//Returns a string_view of length n beginning from `from` if the length doesn't go past the `end` 
+[[nodiscard]] constexpr std::optional<std::string_view> maybe_substring(const std::string_view::const_iterator from, const std::string_view::const_iterator end, const int n) noexcept
 {
-    if (begin + n - 1 < end)
+    if (from + n - 1 < end)
     {
-        return substring(begin, n);
+        return substring(from, n);
     }
 
     return std::nullopt;
 }
 
+//Returns a substring of length n starting from string::cbegin if n is smaller than the len of the string
 [[nodiscard]] constexpr std::optional<std::string_view> maybe_substring(const std::string_view& string, const int n) noexcept
 {
     if (n < ssize(string))
