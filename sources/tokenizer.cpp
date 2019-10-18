@@ -191,13 +191,23 @@ namespace lcl
 
             while (!end_of_source())
             {
-                if (auto after_whitespace_iterator = get_iterator_after_consuming_whitespace_from(iterator); after_whitespace_iterator != iterator)
+                switch (*iterator)
                 {
-                    iterator = after_whitespace_iterator;
-                    
-                    if (end_of_source()) 
+                    [[fallthrough]]
+                    case ' ':
                     {
-                        break;
+                        if (auto after_whitespace_iterator = get_iterator_after_consuming_whitespace_from(iterator); after_whitespace_iterator != iterator)
+                        {
+                            iterator = after_whitespace_iterator;
+
+                            continue;
+                        }
+                    }
+
+                    [[fallthrough]]
+                    case '\n':
+                    {
+
                     }
                 }
 
