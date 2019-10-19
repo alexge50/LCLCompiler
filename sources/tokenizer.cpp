@@ -22,26 +22,6 @@ namespace lcl
             return iterator == source_code.cend();
         }
 
-        [[nodiscard]] std::optional<token> try_tokenize_single_line_comment() const
-        {
-            const auto first_2_chars = maybe_substring(iterator, source_code.cend(), 2);
-
-            if (!first_2_chars.has_value())
-            {
-                return std::nullopt;
-            }
-
-            if (*first_2_chars != "//")
-            {
-                return std::nullopt;
-            }
-
-            const auto comment_begin = iterator;
-            const auto comment_end   = std::find_if(iterator, source_code.cend(), ascii::is_newline);
-
-            return token { token_type::comment, substring(comment_begin, comment_end) };
-        }
-
         [[nodiscard]] std::optional<token> try_tokenize_multi_line_comment() const
         {
             if (substring(iterator, 2) != "/*") 
@@ -195,6 +175,77 @@ namespace lcl
                         iterator = newlines_end;
 
                         continue;
+                    }
+
+                    case '/':
+                    {
+                        const auto forward_slash_begin = iterator;
+                        const auto after_forward_slash = forward_slash_begin + 1;
+
+                        //If this is the end then we add a forward_slash
+                        if (after_forward_slash == source_code.cend())
+                        {
+                            tokens.emplace_back(token_type::forward_slash, substring(forward_slash_begin, 1));
+                        }
+                        else switch (*after_forward_slash)
+                        {
+                            //Regular comment
+                            case '/':
+                            {
+                                const auto comment_end = std::find(after_forward_slash, source_code.cend(), '\n');
+                                
+                                tokens.emplace_back(token_type::forward_slash, substring(forward_slash_begin, comment_end));
+                            }
+
+                            //Multiline comment
+                            case '*':
+                            {
+                                auto inner_comments_count = 0;
+                                const auto code_to_look_at = substring(after_forward_slash + 1, source_code.cend());
+
+                                for (int i = 0; i < ssize(code_to_look_at) - 1; i++)
+                                {
+                                    const auto view = substring(code_to_look_at.cbegin() + i, 2);
+
+                                    if (view == "/*")
+                                    {
+                                        inner_comments_count++;
+                                        i++;
+                                        continue;
+                                    }
+
+                                    if (view == "*/")
+                                    {
+                                        if (inner_comments_count == 0)
+                                        {
+                                            return view.cbegin();
+                                        }
+
+                                        inner_comments_count--;
+                                        i++;
+                                    }
+                                }
+
+                                return code_to_look_at.cend();
+                            }
+
+                            default:
+                            {
+                                tokens.emplace_back(token_type::forward_slash, substring(forward_slash_begin, 1));
+                            }
+                        }
+
+                        
+
+                        if (*first_2_chars != "//")
+                        {
+                            return std::nullopt;
+                        }
+
+                        const auto comment_begin = iterator;
+                        const auto comment_end   = std::find_if(iterator, source_code.cend(), ascii::is_newline);
+
+                        return token { token_type::comment, substring(comment_begin, comment_end) };
                     }
                 }
 
