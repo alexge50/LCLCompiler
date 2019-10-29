@@ -218,8 +218,22 @@ namespace lcl
 
                 default: 
                 {
-                    //Unreachable
-                    assert(false);
+                    if (lcl::chars::is_ascii_digit(*code_iterator))
+                    {
+                        const auto numeric_literal_begin = code_iterator;
+                        const auto numeric_literal_end   = std::find_if_not(numeric_literal_begin, code_end, lcl::is_valid_mid_character_in_numeric_literal);
+
+                        tokens.emplace_back(lcl::token_type::numeric_literal, lcl::utils::string_view_from_iterator(numeric_literal_begin, numeric_literal_end));
+                        code_iterator = numeric_literal_end;
+                    }
+                    else if (lcl::is_valid_first_character_in_word(*code_iterator))
+                    {
+                        const auto word_literal_begin = code_iterator;
+                        const auto word_literal_end   = std::find_if_not(word_literal_begin, code_end, lcl::is_valid_mid_character_in_word);
+
+                        tokens.emplace_back(lcl::token_type::word, lcl::utils::string_view_from_iterator(word_literal_begin, word_literal_end));
+                        code_iterator = word_literal_end;
+                    }
                 }
             }
         }

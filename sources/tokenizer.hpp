@@ -307,9 +307,9 @@ namespace lcl
     struct token
     {
         const lcl::token_type  type;
-        const std::string_view source_code;
+        const std::string_view code;
 
-        constexpr token(const lcl::token_type type, const std::string_view& source_code_of_token) : type(type), source_code(source_code_of_token)
+        constexpr token(const lcl::token_type type, const std::string_view& code_of_token) : type(type), code(code_of_token)
         {
             //Empty
         }
@@ -321,12 +321,12 @@ namespace lcl
 
         [[nodiscard]] constexpr bool is_multi_line_comment() const noexcept
         {
-            return is_comment() && source_code.substr(0, 2) == "/*";
+            return is_comment() && code.substr(0, 2) == "/*";
         }
 
         [[nodiscard]] constexpr bool is_single_line_comment() const noexcept
         {
-            return is_comment() && source_code.substr(0, 2) == "//";
+            return is_comment() && code.substr(0, 2) == "//";
         }
 
         [[nodiscard]] constexpr bool is_string_literal() const noexcept 
@@ -334,9 +334,45 @@ namespace lcl
             return type == lcl::token_type::string_literal;
         }
 
-        [[nodiscard]] constexpr bool is_int_literal() const noexcept 
+        [[nodiscard]] constexpr bool is_numeric_literal() const noexcept 
         {
             return type == lcl::token_type::numeric_literal;
+        }
+
+        [[nodiscard]] constexpr bool is_int_literal() const noexcept 
+        {
+            if (type == lcl::token_type::numeric_literal)
+            {
+                for (const auto& it : code)
+                {
+                    if (it == '.')
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        [[nodiscard]] constexpr bool is_float_literal() const noexcept 
+        {
+            if (type == lcl::token_type::numeric_literal)
+            {
+                for (const auto& it : code)
+                {
+                    if (it == '.')
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return false;
         }
 
         [[nodiscard]] constexpr bool is_single_char_token() const noexcept 
@@ -355,7 +391,12 @@ namespace lcl
         return lcl::chars::is_ascii_letter(it) || lcl::chars::is_ascii_digit(it) || it == '_';
     }
 
-    [[nodiscard]] std::vector<lcl::token> tokenize_code(const std::string_view& source_code);
+    [[nodiscard]] constexpr bool is_valid_mid_character_in_numeric_literal(const char32_t it) noexcept
+    {
+        return lcl::chars::is_ascii_digit(it) || it == '.' || it == '_';
+    }
+
+    [[nodiscard]] std::vector<lcl::token> tokenize_code(const std::string_view& code);
 }
 
 #endif //LCLCOMPILER_TOKENIZER_HPP
