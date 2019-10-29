@@ -1,18 +1,25 @@
 @echo off
 
-if not exist external_bin mkdir external_bin
-pushd external_bin
+if not exist "./bin/libs_bin" mkdir "./bin/libs_bin"
+pushd "bin/libs_bin"
 
-cl /nologo /c /MT /MP /Gm- /DUTF8PROC_STATIC /Z7 /I ../external/ ../external/utf8proc/utf8proc.c
-cl /nologo /c /MT /MP /Gm- /Gm- /EHsc /EHa- /Z7 /I ../external/ ../external/fmt/posix.cc
-cl /nologo /c /MT /MP /Gm- /Gm- /EHsc /EHa- /Z7 /I ../external/ ../external/fmt/format.cc
+::Clean
+del *.lib > NUL
 
+::Build utf8proc
+cl /nologo /c /MT /MP /Gm- /DUTF8PROC_STATIC /Z7 /I ../../libs/ ../../libs/utf8proc/utf8proc.c
+
+::Build fmt
+cl /nologo /c /MT /MP /Gm- /Gm- /EHsc /EHa-  /Z7 /I ../../libs/ ../../libs/fmt/posix.cc
+cl /nologo /c /MT /MP /Gm- /Gm- /EHsc /EHa-  /Z7 /I ../../libs/ ../../libs/fmt/format.cc
+
+::Gen utf8proc lib
 lib /nologo utf8proc.obj
+
+::Gen fmt libs
 lib /nologo posix.obj
 lib /nologo format.obj 
 
-del utf8proc.obj
-del posix.obj
-del format.obj
+del *.obj
 
 popd
