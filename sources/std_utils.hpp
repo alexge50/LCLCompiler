@@ -14,7 +14,7 @@ namespace lcl::utils
         return std::array<typename std::decay<typename std::common_type<T...>::type>::type, sizeof...(T)>{ std::forward<T>(values)... };
     }
 
-    //Note: to be removed when moving over to C++20
+    //@Cleanup: to be removed when moving over to C++20
     template <class C>
     constexpr auto ssize(const C& c) noexcept -> std::common_type_t<std::ptrdiff_t, std::make_signed_t<decltype(std::size(c))>> 
     {
@@ -36,7 +36,22 @@ namespace lcl::utils
 
     [[nodiscard]] constexpr std::string_view string_view_from_iterator(const std::string_view::const_iterator begin, const std::string_view::const_iterator end) noexcept
     {
+        assert(begin <= end);
         return std::string_view { &*begin, static_cast<std::size_t>(std::distance(begin, end)) };
+    }
+
+    [[nodiscard]] constexpr std::string_view substring(const std::string_view& it, const int end) noexcept 
+    {
+        assert(end >= 0 && end < lcl::utils::ssize(it));
+
+        return std::string_view { &*std::cbegin(it), static_cast<size_t>(end) };
+    }
+
+    [[nodiscard]] constexpr std::string_view substring(const std::string_view& it, const int begin, const int end) noexcept 
+    {
+        assert(begin >= 0 && begin < lcl::utils::ssize(it) && end >= 0 && end < lcl::utils::ssize(it));
+
+        return std::string_view { &*std::cbegin(it), static_cast<size_t>(end - begin) };
     }
 
     //Returns a string_view of length n beginning from `from` if the length doesn't go past the `end` 
