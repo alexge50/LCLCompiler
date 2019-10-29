@@ -235,6 +235,78 @@ void test_tokenization_of_words()
     }
 }
 
+void test_tokenization_of_complex_example()
+{
+    const auto source = R"source_code(
+        import Print: *;
+
+        main :: () -> void
+        {
+            hello := 1;
+
+            while (hello == 1)
+            {
+                print("Hello Sailor!");
+            }
+        }
+    )source_code";
+
+    const auto expected_token_types = lcl::utils::make_array
+    (
+        lcl::token_type::newline,
+        lcl::token_type::word, lcl::token_type::word, lcl::token_type::colon, lcl::token_type::star, lcl::token_type::semicolon, lcl::token_type::newline, 
+        lcl::token_type::newline,
+        lcl::token_type::word, lcl::token_type::colon, lcl::token_type::colon, lcl::token_type::open_parans, lcl::token_type::close_parans, lcl::token_type::minus, lcl::token_type::right_arrow, lcl::token_type::word, lcl::token_type::newline, 
+        lcl::token_type::open_curly, lcl::token_type::newline,
+        lcl::token_type::word, lcl::token_type::colon, lcl::token_type::equal, lcl::token_type::numeric_literal, lcl::token_type::semicolon, lcl::token_type::newline,
+        lcl::token_type::newline,
+        lcl::token_type::word, lcl::token_type::open_parans, lcl::token_type::word, lcl::token_type::equal, lcl::token_type::equal, lcl::token_type::numeric_literal, lcl::token_type::close_parans, lcl::token_type::newline,
+        lcl::token_type::open_curly, lcl::token_type::newline,
+        lcl::token_type::word, lcl::token_type::open_parans, lcl::token_type::string_literal, lcl::token_type::close_parans, lcl::token_type::semicolon, lcl::token_type::newline,
+        lcl::token_type::close_curly, lcl::token_type::newline,
+        lcl::token_type::close_curly, lcl::token_type::newline 
+    );
+
+    const auto result = lcl::tokenize_code(source);
+
+    assert(result.size() == expected_token_types.size());
+
+    const auto tokens_as_expected = [&] ()
+    {
+        for (auto i = 0; i < lcl::utils::ssize(result); ++i)
+        {
+            if (result[i].type != expected_token_types[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }();
+
+    assert(tokens_as_expected);
+
+    for (auto token_index = 0; token_index < lcl::utils::ssize(result); ++token_index)
+    {
+        const auto& token = result[token_index];
+
+        if (token.is_word())
+        {
+            switch (token_index)
+            {
+                case  1: assert(token.is_keyword()    && token.code == "import"); break;
+                case  2: assert(token.is_identifier() && token.code == "Print");  break;
+                case  8: assert(token.is_identifier() && token.code == "main");   break;
+                case 15: assert(token.is_keyword()    && token.code == "void");   break;
+                case 19: assert(token.is_identifier() && token.code == "hello");  break;
+                case 26: assert(token.is_keyword()    && token.code == "while");  break;
+                case 28: assert(token.is_identifier() && token.code == "hello");  break;
+                case 36: assert(token.is_identifier() && token.code == "print");  break;
+            }
+        }
+    }
+}
+
 int main()
 {
     fmt::print("Running Tokenizer Tests\n");
@@ -245,6 +317,7 @@ int main()
     test_tokenization_of_string();
     test_tokenization_of_single_char_tokens();
     test_tokenization_of_numeric_literals();
+    test_tokenization_of_complex_example();
     
     fmt::print("Tokenizer tests run succesfully.");
 }

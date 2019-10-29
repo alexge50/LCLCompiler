@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cassert>
 
 #include "fmt/core.h"
@@ -10,7 +9,7 @@
 int main()
 {
     fmt::print("Hello, {}!", "world");
-    std::cout << magic_enum::enum_name(lcl::token_type::open_curly);
+    fmt::print(magic_enum::enum_name(lcl::token_type::open_curly));
 
     return 0;
 }

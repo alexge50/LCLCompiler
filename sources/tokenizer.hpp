@@ -27,6 +27,7 @@ namespace lcl
         "for",
         "goto",
         "if",
+        "import",
         "inline",
         "int",
         "mut",
@@ -99,8 +100,8 @@ namespace lcl
         close_curly,           // }
         bar,                   // |
         semicolon,             // ;
-        forward_slash,          // /
-        backward_slash,         // \
+        forward_slash,         // /
+        backward_slash,        // \
 
     };
 
