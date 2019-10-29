@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 
 #include "tokenizer.hpp"
 #include "magic_enum.hpp"

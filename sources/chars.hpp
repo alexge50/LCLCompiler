@@ -1,7 +1,7 @@
 #ifndef LCLCOMPILER_CHARS_HPP
 #define LCLCOMPILER_CHARS_HPP
 
-#include "external/utf8proc/utf8proc.h"
+#include "utf8proc/utf8proc.h"
 
 namespace lcl::chars
 {

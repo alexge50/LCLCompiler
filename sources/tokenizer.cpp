@@ -11,206 +11,124 @@
 
 namespace lcl
 {
-    class tokenizer
+    [[nodiscard]] std::vector<token> tokenize_code(const std::string_view& code)
     {
-        std::vector<token>               tokens;
-        std::string_view                 source_code;
-        std::string_view::const_iterator iterator;
+        const auto code_begin = std::cbegin(code);
+        const auto code_end   = std::cend(code);
 
-        [[nodiscard]] bool end_of_source() const noexcept
+        auto tokens        = std::vector<lcl::token>{};
+        auto code_iterator = code_begin;
+
+        const auto add_one_char_token = [&] (const lcl::token_type tk_type) 
+        { 
+            tokens.emplace_back(tk_type, lcl::utils::string_view_from_iterator(code_iterator, std::next(code_iterator))); 
+            code_iterator = std::next(code_iterator);
+        };
+
+        while (code_iterator != code_end)
         {
-            return iterator == source_code.cend();
-        }
-
-        [[nodiscard]] std::optional<token> try_tokenize_multi_line_comment() const
-        {
-            if (substring(iterator, 2) != "/*") 
+            switch (*code_iterator)
             {
-                return std::nullopt;
-            }
-
-            const auto comment_begin   = iterator;
-            const auto code_to_look_at = substring(comment_begin + 2, source_code.cend());
-            const auto comment_end     = [&code_to_look_at] () -> std::string_view::const_iterator
-            {
-                auto inner_comments_count = 0;
-
-                for (int i = 0; i < ssize(code_to_look_at) - 1; i++)
+                //One character tokens
+                case '`':
+                case '\n':
+                case '~':
+                case '!':
+                case '@':
+                case '#':
+                case '%':
+                case '^':
+                case '&':
+                case '*':
+                case '(':
+                case ')':
+                case '-':
+                case '+':
+                case '=':
+                case ':':
+                case '<':
+                case '>':
+                case ',':
+                case '.':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
+                case '|':
+                case ';':
+                //case '/': We dont handle / here because it is used to produce comments
+                case '\\':
                 {
-                    const auto view = substring(code_to_look_at.cbegin() + i, 2);
-
-                    if (view == "/*")
-                    {
-                        inner_comments_count++;
-                        i++;
-                        continue;
-                    }
-
-                    if (view == "*/")
-                    {
-                        if (inner_comments_count == 0)
-                        {
-                            return view.cbegin();
-                        }
-
-                        inner_comments_count--;
-                        i++;
-                    }
+                    tokens.emplace_back(lcl::get_token_type_that_represents_char(*code_iterator), lcl::utils::string_view_from_iterator(code_iterator, std::next(code_iterator))); 
+                    code_iterator = std::next(code_iterator);
+                    
+                    continue;
                 }
 
-                return code_to_look_at.cend();
-            }();
-
-            if (comment_end == code_to_look_at.cend()) 
-            {
-                //@Temporary
-                assert(!"Error: Comment was not closed.");
-            }
-
-            return token { token_type::comment, substring(comment_begin, comment_end + 2) };
-        }
-
-        [[nodiscard]] std::optional<token> try_tokenize_string_literal() const
-        {
-            if (*iterator != '"') 
-            {
-                return std::nullopt;
-            }
-
-            auto escaped_character = false;
-
-            const auto string_literal_begin = iterator;
-            const auto string_literal_end   = std::find_if(iterator + 1, source_code.cend(), [&escaped_character] (auto it) 
-            {
-                if (escaped_character)
+                case ' ':
                 {
-                    escaped_character = false;
-                    return ascii::is_newline(it);
+                    code_iterator = std::find_if_not(code_iterator, code_end, lcl::chars::is_white_space_not_newline);
+                    
+                    continue;
                 }
 
-                if (it == '\\')
+                case '/':
                 {
-                    escaped_character = true;
-                    return false;
-                }
+                    const auto iterator_to_initial_forward_slash    = code_iterator;
+                    const auto iterator_after_initial_forward_slash = std::next(iterator_to_initial_forward_slash);
+                    const auto should_tokenize_comment              = iterator_after_initial_forward_slash != code_end && (*iterator_after_initial_forward_slash == '/' || *iterator_after_initial_forward_slash == '*');
 
-                return it == '"' || ascii::is_newline(it); 
-            });
-
-            if (string_literal_end == source_code.cend() || *string_literal_end != '"')
-            {
-                //Compiler error: String Literal didn't end with a '"'
-                //@Temporary
-                assert(!"Compiler error: String Literal didn't end with a '\"'.");
-            }
-
-            return token { token_type::string_literal, substring(string_literal_begin, string_literal_end + 1) };
-        }
-
-        [[nodiscard]] std::optional<token> try_tokenize_integer_literal() const
-        {
-            if (!ascii::is_digit(*iterator)) 
-            {
-                return std::nullopt;
-            }
-
-            const auto integer_literal_begin = iterator;
-            const auto integer_literal_end   = std::find_if_not(iterator, source_code.cend(), ascii::is_digit);
-
-            return token { token_type::integer_literal, substring(integer_literal_begin, integer_literal_end) };
-        }
-
-        [[nodiscard]] std::optional<token> try_tokenize_word() const
-        {
-            if (!is_valid_first_character_in_word(*iterator))
-            {
-                return std::nullopt;
-            }
-
-            const auto word_begin = iterator;
-            const auto word_end   = std::find_if_not(iterator + 1, source_code.cend(), is_valid_mid_character_in_word);
-
-            return token { token_type::word, substring(word_begin, word_end) };
-        }
-
-        [[nodiscard]] bool try_add_token(const std::optional<token>& tk)
-        {
-            if (!tk) 
-            {
-                return false;
-            }
-
-            tokens.push_back(*tk);
-            iterator += tk->source_code.length();
-
-            return true;
-        }
-
-    public:
-        [[nodiscard]] std::vector<token> tokenize(const std::string_view& source_code)
-        {
-            this->source_code = source_code;
-            this->iterator    = source_code.cbegin();
-            
-            while (!end_of_source())
-            {
-                switch (*iterator)
-                {
-                    case ' ':
+                    if (!should_tokenize_comment)
                     {
-                        iterator = std::find_if_not(iterator, source_code.cend(), ascii::is_white_space);
-                        continue;
-                    }
-
-                    case '\n':
-                    {
-                        const auto newlines_end   = std::find_if_not(iterator, source_code.cend(), ascii::is_newline);
-                        const auto newlines_count = std::distance(iterator, newlines_end);
-
-                        for (int i = 0; i < newlines_count; i++)
-                        {
-                            tokens.emplace_back(token_type::newline, substring(iterator + i, 1));
-                        }
-
-                        iterator = newlines_end;
+                        tokens.emplace_back(lcl::token_type::forward_slash, lcl::utils::string_view_from_iterator(iterator_to_initial_forward_slash, 1));
+                        code_iterator = std::next(code_iterator);
 
                         continue;
                     }
-
-                    case '/':
+                    else switch (*iterator_after_initial_forward_slash)
                     {
-                        const auto forward_slash_begin = iterator;
-                        const auto after_forward_slash = forward_slash_begin + 1;
+                        //Regular comment
+                        case '/':
+                        {
+                            const auto commend_begin = iterator_to_initial_forward_slash;
+                            const auto comment_end   = std::find(iterator_after_initial_forward_slash, code_end, '\n');
+                            
+                            tokens.emplace_back(lcl::token_type::comment, lcl::utils::string_view_from_iterator(commend_begin, comment_end));
+                            code_iterator = comment_end;
 
-                        //If this is the end then we add a forward_slash
-                        if (after_forward_slash == source_code.cend())
-                        {
-                            tokens.emplace_back(token_type::forward_slash, substring(forward_slash_begin, 1));
+                            continue;
                         }
-                        else switch (*after_forward_slash)
+
+                        //Multiline comment
+                        case '*':
                         {
-                            //Regular comment
-                            case '/':
+                            const auto comment_begin = iterator_to_initial_forward_slash;
+
+                            //A multiline comment ends with `*/`.
+                            //This procedure will return an iterator to the slash at the end of the close `*/` or `code_end` in case it was not found.
+                            //This procedure also takes into account nested comments. 
+                            const auto iterator_to_comment_closer_slash = [&] () -> std::string_view::const_iterator 
                             {
-                                const auto comment_end = std::find(after_forward_slash, source_code.cend(), '\n');
+                                //We ignore the initial `/*` so we start 2 chars ahead to look for the end `*/` of the comment.
+                                const auto code_to_look_at_for_comment_closer_begin  = std::next(comment_begin, 2);
+                                const auto code_to_look_at_for_comment_closer_length = std::distance(code_to_look_at_for_comment_closer_begin, code_end);  
                                 
-                                tokens.emplace_back(token_type::forward_slash, substring(forward_slash_begin, comment_end));
-                            }
-
-                            //Multiline comment
-                            case '*':
-                            {
+                                //We use this to count inner comment blocks. Eg: /* /* inner */ */
                                 auto inner_comments_count = 0;
-                                const auto code_to_look_at = substring(after_forward_slash + 1, source_code.cend());
-
-                                for (int i = 0; i < ssize(code_to_look_at) - 1; i++)
+                                
+                                //We look at 2 chars at a time, advance by one char. Eg: for "Test" we will look at the views: [ "Te", "es", "st" ]
+                                for (auto i = 0; i < code_to_look_at_for_comment_closer_length - 1; ++i)
                                 {
-                                    const auto view = substring(code_to_look_at.cbegin() + i, 2);
+                                    const auto view = lcl::utils::string_view_from_iterator(std::next(code_to_look_at_for_comment_closer_begin, i), 2);
 
                                     if (view == "/*")
                                     {
-                                        inner_comments_count++;
-                                        i++;
+                                        ++inner_comments_count;
+                                        
+                                        //We need to advance by 2 chars here because we dont want the `*` to be reused, 
+                                        //that would make cases like `/*/` valid and we don't want that.
+                                        ++i;
+                                        
                                         continue;
                                     }
 
@@ -218,52 +136,94 @@ namespace lcl
                                     {
                                         if (inner_comments_count == 0)
                                         {
-                                            return view.cbegin();
+                                            return std::next(std::cbegin(view));
                                         }
 
-                                        inner_comments_count--;
-                                        i++;
+                                        --inner_comments_count;
+
+                                        //We need to advance by 2 chars here because we dont want the `*` to be reused, 
+                                        //that would make cases like `/*/` valid and we don't want that.
+                                        ++i;
                                     }
                                 }
 
-                                return code_to_look_at.cend();
-                            }
+                                return code_end;
+                            }();
 
-                            default:
-                            {
-                                tokens.emplace_back(token_type::forward_slash, substring(forward_slash_begin, 1));
-                            }
+                            //Todo: Error handling
+                            assert(iterator_to_comment_closer_slash != code_end);
+
+                            const auto comment_end = std::next(iterator_to_comment_closer_slash);
+
+                            tokens.emplace_back(lcl::token_type::comment, lcl::utils::string_view_from_iterator(comment_begin, comment_end));
+                            code_iterator = comment_end;
+
+                            continue;
                         }
-
-                        
-
-                        if (*first_2_chars != "//")
-                        {
-                            return std::nullopt;
-                        }
-
-                        const auto comment_begin = iterator;
-                        const auto comment_end   = std::find_if(iterator, source_code.cend(), ascii::is_newline);
-
-                        return token { token_type::comment, substring(comment_begin, comment_end) };
                     }
                 }
 
-                if (try_add_token(try_tokenize_single_line_comment())) continue;
-                if (try_add_token(try_tokenize_multi_line_comment()))  continue;
-                if (try_add_token(try_tokenize_string_literal()))      continue;
-                if (try_add_token(try_tokenize_integer_literal()))     continue;
+                case '"':
+                {
+                    const auto string_begin = code_iterator;
+                    
+                    //Used to mark if the next character should be escaped, such as `\"`
+                    auto escape_next_character = false;
+                    //This proc will return an iterator to the closing `"` or code_end if the string isn't closed properly.
+                    //We start looking after the first `"`.
+                    const auto iterator_to_string_closer = std::find_if(std::next(string_begin), code_end, [&escape_next_character] (const char& it) mutable -> bool 
+                    { 
+                        //Todo: Error handling
+                        assert(!lcl::chars::is_newline(it) && it != 0);
 
-                assert(!"Nothing to tokenize, AHHHHH");
+                        switch (it)
+                        {
+                            case '\\': 
+                            {
+                                escape_next_character = true; 
+                                return false;
+                            }
+
+                            case '"' : 
+                            {
+                                if (escape_next_character) 
+                                { 
+                                    escape_next_character = false;
+                                    return false; 
+                                } 
+                                else 
+                                { 
+                                    return true; 
+                                }
+                            }
+
+                            default: 
+                            {
+                                escape_next_character = false; 
+                                return false;
+                            }
+                        }
+                    });
+
+                    //Todo: Error handling
+                    assert(iterator_to_string_closer != code_end);
+
+                    const auto string_end = std::next(iterator_to_string_closer);
+
+                    tokens.emplace_back(lcl::token_type::string_literal, lcl::utils::string_view_from_iterator(string_begin, string_end));
+                    code_iterator = string_end;
+
+                    continue;
+                }
+
+                default: 
+                {
+                    //Unreachable
+                    assert(false);
+                }
             }
-
-            return tokens;
         }
-    };
 
-    [[nodiscard]] std::vector<token> get_tokens_of_source_code(const std::string_view& source_code)
-    {
-        auto the_tokenizer = tokenizer{};
-        return the_tokenizer.tokenize(source_code);
+        return tokens;
     }
 }
