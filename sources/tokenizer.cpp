@@ -150,7 +150,7 @@ namespace lcl
                                 return code_end;
                             }();
 
-                            //Todo: Error handling
+                            //@Todo: Error handling
                             assert(iterator_to_comment_closer_slash != code_end);
 
                             const auto comment_end = std::next(iterator_to_comment_closer_slash);
@@ -173,7 +173,7 @@ namespace lcl
                     //We start looking after the first `"`.
                     const auto iterator_to_string_closer = std::find_if(std::next(string_begin), code_end, [&escape_next_character] (const char& it) mutable -> bool 
                     { 
-                        //Todo: Error handling
+                        //@Todo: Error handling
                         assert(!lcl::chars::is_newline(it) && it != 0);
 
                         switch (it)
@@ -205,7 +205,7 @@ namespace lcl
                         }
                     });
 
-                    //Todo: Error handling
+                    //@Todo: Error handling
                     assert(iterator_to_string_closer != code_end);
 
                     const auto string_end = std::next(iterator_to_string_closer);

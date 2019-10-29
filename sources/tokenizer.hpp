@@ -9,6 +9,63 @@
 
 namespace lcl
 {
+    constexpr auto keywords = lcl::utils::make_array<std::string_view>
+    (
+        "alignof",
+        "and",
+        "asm",
+        "bool",
+        "break",
+        "case",
+        "catch",
+        "char",
+        "continue",
+        "default",
+        "do",
+        "else",
+        "false",
+        "for",
+        "goto",
+        "if",
+        "inline",
+        "int",
+        "mut",
+        "not",
+        "null",
+        "operator",
+        "or",
+        "private",
+        "public",
+        "return",
+        "sizeof",
+        "struct",
+        "switch",
+        "this",
+        "true",
+        "try",
+        "union",
+        "typedef",
+        "typename",
+        "using",
+        "void",
+        "with",
+        "while"
+    );
+
+    //@Cleanup: replace with constexpr std::find in C++20
+    [[nodiscard]] constexpr bool is_keyword(const std::string_view& it) noexcept
+    {
+        for (const auto& keyword : keywords)
+        {
+            if (it == keyword)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     enum class token_type
     {
         word,                  // if, for, test 
@@ -321,12 +378,12 @@ namespace lcl
 
         [[nodiscard]] constexpr bool is_multi_line_comment() const noexcept
         {
-            return is_comment() && code.substr(0, 2) == "/*";
+            return is_comment() && lcl::utils::substring(code, 2) == "/*";
         }
 
         [[nodiscard]] constexpr bool is_single_line_comment() const noexcept
         {
-            return is_comment() && code.substr(0, 2) == "//";
+            return is_comment() && lcl::utils::substring(code, 2) == "//";
         }
 
         [[nodiscard]] constexpr bool is_string_literal() const noexcept 
@@ -357,6 +414,7 @@ namespace lcl
             return false;
         }
 
+        //@Cleanup: replace loop with contsexpr std::find in C++20
         [[nodiscard]] constexpr bool is_float_literal() const noexcept 
         {
             if (type == lcl::token_type::numeric_literal)
@@ -378,6 +436,21 @@ namespace lcl
         [[nodiscard]] constexpr bool is_single_char_token() const noexcept 
         {
             return lcl::is_token_type_representing_a_single_char(type);
+        }
+
+        [[nodiscard]] constexpr bool is_word() const noexcept 
+        {
+            return type == lcl::token_type::word;
+        }
+
+        [[nodiscard]] constexpr bool is_keyword() const noexcept 
+        {
+            return is_word() && lcl::is_keyword(code);
+        }
+
+        [[nodiscard]] constexpr bool is_identifier() const noexcept 
+        {
+            return is_word() && !lcl::is_keyword(code);
         }
     };
 

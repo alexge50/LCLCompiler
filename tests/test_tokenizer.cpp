@@ -205,6 +205,36 @@ void test_tokenization_of_single_char_tokens()
     }
 }
 
+void test_tokenization_of_words()
+{
+    {
+        const auto source = "test";
+
+        const auto result = lcl::tokenize_code(source);
+
+        assert(result.size() == 1);
+        
+        assert(result[0].type        == lcl::token_type::word);
+        assert(result[0].code.size() == 1);
+        assert(result[0].code        == source);
+        assert(result[0].is_word());
+        assert(result[0].is_identifier());
+    }
+
+    for (const auto source : lcl::keywords)
+    {
+        const auto result = lcl::tokenize_code(source);
+
+        assert(result.size() == 1);
+        
+        assert(result[0].type        == lcl::token_type::word);
+        assert(result[0].code.size() == 1);
+        assert(result[0].code        == source);
+        assert(result[0].is_word());
+        assert(result[0].is_keyword());
+    }
+}
+
 int main()
 {
     fmt::print("Running Tokenizer Tests\n");
