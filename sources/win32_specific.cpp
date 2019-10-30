@@ -7,12 +7,12 @@ namespace lcl::memory
 {
     static SYSTEM_INFO win32_global_system_info;
 
-    [[nodiscard]] static inline bool is_win32_global_system_info_initialised() 
+    [[nodiscard]] static inline auto is_win32_global_system_info_initialised() noexcept -> bool 
     {
         return win32_global_system_info.dwPageSize != 0;
     }
 
-    [[nodiscard]] size_t get_page_size()
+    [[nodiscard]] auto get_page_size() -> std::size_t
     {
         if (!is_win32_global_system_info_initialised())
         {
@@ -23,7 +23,7 @@ namespace lcl::memory
         return win32_global_system_info.dwPageSize;
     }
 
-    [[nodiscard]] std::byte* reserve_memory_pages(const size_t pages_to_reserve)
+    [[nodiscard]] auto reserve_memory_pages(const std::size_t pages_to_reserve) -> std::byte*
     {
         auto result = VirtualAlloc(nullptr, pages_to_reserve * get_page_size(), MEM_RESERVE, PAGE_READWRITE);
     
@@ -35,17 +35,17 @@ namespace lcl::memory
         return static_cast<std::byte*>(result);
     }
     
-    void commit_memory_pages(const void* base_address, const size_t pages_to_commit)
+    auto commit_memory_pages(const void* base_address, const std::size_t pages_to_commit) -> void
     {
         //@Todo
     }
 
-    void decommit_memory_pages(const void* base_address, const size_t pages_to_uncommit)
+    auto decommit_memory_pages(const void* base_address, const std::size_t pages_to_uncommit) -> void
     {
         //@Todo
     }
 
-    void unreserve_memory_pages(const void* base_address, const size_t pages_to_unreserve)
+    auto unreserve_memory_pages(const void* base_address, const std::size_t pages_to_unreserve) -> void
     {
         //@Todo
     }

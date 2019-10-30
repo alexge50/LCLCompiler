@@ -6,18 +6,18 @@
 
 namespace lcl::memory
 {
-    [[nodiscard]] std::size_t get_page_size();
-    [[nodiscard]] std::byte*  reserve_memory_pages(const std::size_t pages_to_reserve);
+    [[nodiscard]] auto get_page_size() -> std::size_t;
+    [[nodiscard]] auto reserve_memory_pages(const std::size_t pages_to_reserve) -> std::byte*;
     
-    void commit_memory_pages   (const void* base_address, const std::size_t pages_to_commit);
-    void decommit_memory_pages (const void* base_address, const std::size_t pages_to_uncommit);
-    void unreserve_memory_pages(const void* base_address, const std::size_t pages_to_unreserve);
+    auto commit_memory_pages   (const void* base_address, const std::size_t pages_to_commit) -> void;
+    auto decommit_memory_pages (const void* base_address, const std::size_t pages_to_uncommit) -> void;
+    auto unreserve_memory_pages(const void* base_address, const std::size_t pages_to_unreserve) -> void;
 
     class contiguous_virtual_memory_arena
     {
         const std::size_t m_reserved_pages;
         std::size_t       m_committed_pages = 0;
-        std::byte*   m_base            = nullptr;
+        std::byte*        m_base            = nullptr;
 
         public:
         explicit contiguous_virtual_memory_arena(const std::size_t pages_to_reserve) : m_reserved_pages(pages_to_reserve)
@@ -26,38 +26,38 @@ namespace lcl::memory
         }
 
         private:
-        [[nodiscard]] std::byte* address_to_commit_from() const noexcept
+        [[nodiscard]] auto address_to_commit_from() const noexcept -> std::byte*
         {
             return m_base + committed_bytes();
         }
 
         public:
-        [[nodiscard]] std::size_t reserved_pages() const noexcept 
+        [[nodiscard]] auto reserved_pages() const noexcept -> std::size_t 
         {
             return m_reserved_pages;
         }
 
-        [[nodiscard]] std::size_t reserved_bytes() const noexcept
+        [[nodiscard]] auto reserved_bytes() const noexcept -> std::size_t
         {
             return m_reserved_pages * get_page_size();
         }
 
-        [[nodiscard]] std::size_t committed_pages() const noexcept 
+        [[nodiscard]] auto committed_pages() const noexcept -> std::size_t 
         {
             return m_committed_pages;
         }
 
-        [[nodiscard]] std::size_t committed_bytes() const noexcept 
+        [[nodiscard]] auto committed_bytes() const noexcept -> std::size_t 
         {
             return m_committed_pages * get_page_size();
         }
 
-        [[nodiscard]] std::byte* base_pointer() const noexcept 
+        [[nodiscard]] auto base_pointer() const noexcept -> std::byte*
         {
             return m_base;
         }
 
-        [[nodiscard]] void commit_memory(const std::size_t pages_to_commit) 
+        [[nodiscard]] auto commit_memory(const std::size_t pages_to_commit) -> void 
         {
             commit_memory_pages(address_to_commit_from(), pages_to_commit);
 
@@ -78,11 +78,10 @@ namespace lcl::memory
         using const_pointer   = const T*;
         using reference       = T&;
         using const_reference = const T&;
-        using std::size_type   = std::size_t;
+        using size_type       = std::size_t;
         using difference_type = std::ptrdiff_t;
 
-        template <class U>
-        struct rebind 
+        template <class U> struct rebind 
         { 
             using other = virtual_arena_allocator<U>; 
         };
@@ -91,7 +90,7 @@ namespace lcl::memory
         contiguous_virtual_arena& m_arena;
 
         public:
-        virtual_arena_allocator(const std::size_type reserve_count) noexcept : m_reseved(reserve_count)
+        explicit virtual_arena_allocator(const std::size_type reserve_count) noexcept : m_reseved(reserve_count)
         {
             //Empty
         }
@@ -106,50 +105,51 @@ namespace lcl::memory
 
         }
         
-        pointer address(reference value) const noexcept
+        auto address(reference value) const noexcept -> pointer
         {
             return &value;
         }
 
-        const_pointer address(const_reference value) const noexcept 
+        auto address(const_reference value) const noexcept -> const_pointer 
         {
             return &value;
         }
 
-        std::size_type max_size() const noexcept 
+        auto max_size() const noexcept -> std::size_type 
         {
             return m_reseved;
         }
 
-        pointer allocate(std::size_type size, const void* = nullptr) 
+        auto allocate(std::size_type size, const void* = nullptr) -> pointer 
         {
-            pointer ret = (pointer)(::operator new(num*sizeof(T)));
-            std::cerr << " allocated at: " << (void*)ret << std::endl;
+            auto ret = static_cast<pointer>(::operator new(num * sizeof(T)));
+            std::cerr << " allocated at: " << static_cast<void*>(ret) << std::endl;
             return ret;
         }
 
         // initialize elements of allocated storage p with value value
-        void construct (pointer p, const T& value) 
+        auto construct (pointer p, const T& value) -> void 
         {
             // initialize memory with placement new
-            new((void*)p)T(value);
+            new(static_cast<void*>(p)) T{value};
         }
 
         // destroy elements of initialized storage p
-        void destroy (pointer p) 
+        auto destroy (pointer p) -> void 
         {
             // destroy objects by calling their destructor
             p->~T();
         }
 
         // deallocate storage p of deleted elements
-        void deallocate (pointer p, std::size_type num) 
+        auto deallocate (pointer p, std::size_type num) -> void 
         {
             // print message and deallocate memory with global delete
             std::cerr << "deallocate " << num << " element(s)"
                         << " of size " << sizeof(T)
-                        << " at: " << (void*)p << std::endl;
-            ::operator delete((void*)p);
+                        << " at: " << static_cast<void*>(p) << std::endl;
+                        
+            ::operator delete(static_cast<void*>(p));
         }
 
         ~virtual_arena_allocator() noexcept = default;

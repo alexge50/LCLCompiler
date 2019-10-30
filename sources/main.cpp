@@ -8,7 +8,7 @@
 #include <tokenizer.hpp>
 #include <ast.hpp>
 
-int main()
+auto main() -> int
 {
     fmt::print("Hello, {}!", "world");
     fmt::print(magic_enum::enum_name(lcl::token_type::open_curly));

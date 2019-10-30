@@ -190,7 +190,6 @@ TEST_CASE("Tokenization of string", "[tokenizer]")
 
         REQUIRE(result[0].type == lcl::token_type::string_literal);
         REQUIRE(result[0].code == code);
-        REQUIRE(result[0].is_string_literal());    
     }
 
     SECTION("Test string")
@@ -204,7 +203,6 @@ TEST_CASE("Tokenization of string", "[tokenizer]")
 
         REQUIRE(result[0].type == lcl::token_type::string_literal);
         REQUIRE(result[0].code == code);
-        REQUIRE(result[0].is_string_literal());
     }
 
     SECTION("String with escaped quotations")
@@ -218,7 +216,6 @@ TEST_CASE("Tokenization of string", "[tokenizer]")
 
         REQUIRE(result[0].type == lcl::token_type::string_literal);
         REQUIRE(result[0].code == code);
-        REQUIRE(result[0].is_string_literal());
     }
 
     SECTION("Tokenization failure")
@@ -465,7 +462,7 @@ TEST_CASE("Tokenization of single char tokens", "[tokenizer]")
 
             REQUIRE(result.size() == 3);
             
-            for (auto i = 0; i < lcl::utils::ssize(result); ++i)
+            for (auto i = 0; i < lcl::ssize(result); ++i)
             {
                 REQUIRE(result[i].type == lcl::get_token_type_that_represents_char(code[0]));
                 REQUIRE(result[i].code == it);
@@ -489,7 +486,6 @@ TEST_CASE("Tokenization of words", "[tokenizer]")
         
         REQUIRE(result[0].type == lcl::token_type::word);
         REQUIRE(result[0].code == code);
-        REQUIRE(result[0].is_word());
         REQUIRE(result[0].is_identifier());
     }
 
@@ -505,7 +501,6 @@ TEST_CASE("Tokenization of words", "[tokenizer]")
             
             REQUIRE(result[0].type == lcl::token_type::word);
             REQUIRE(result[0].code == code);
-            REQUIRE(result[0].is_word());
             REQUIRE(result[0].is_keyword());
         }
     }
@@ -527,7 +522,7 @@ TEST_CASE("Tokenization of complex example", "[tokenizer]")
         }
     )code_code";
 
-    const auto expected_token_types = lcl::utils::make_array
+    const auto expected_token_types = lcl::make_array
     (
         lcl::token_type::word, lcl::token_type::word, lcl::token_type::colon, lcl::token_type::star, lcl::token_type::semicolon,  
    
@@ -552,7 +547,7 @@ TEST_CASE("Tokenization of complex example", "[tokenizer]")
 
         const auto tokens_as_expected = [&] ()
         {
-            for (auto i = 0; i < lcl::utils::ssize(result); ++i)
+            for (auto i = 0; i < lcl::ssize(result); ++i)
             {
                 if (result[i].type != expected_token_types[i])
                 {
@@ -568,11 +563,11 @@ TEST_CASE("Tokenization of complex example", "[tokenizer]")
 
     SECTION("Test words match")
     {
-        for (auto token_index = 0; token_index < lcl::utils::ssize(result); ++token_index)
+        for (auto token_index = 0; token_index < lcl::ssize(result); ++token_index)
         {
             const auto& token = result[token_index];
 
-            if (token.is_word())
+            if (token.type == lcl::token_type::word)
             {
                 switch (token_index)
                 {
