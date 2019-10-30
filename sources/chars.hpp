@@ -20,11 +20,6 @@ namespace lcl::chars
         return it == ' ' || it == '\t' || it == '\n' || it == '\r';
     }
 
-    [[nodiscard]] constexpr bool is_white_space_not_newline(const char32_t it) noexcept
-    {
-        return it == ' ' || it == '\t' || it == '\r';
-    }
-
     [[nodiscard]] constexpr bool is_newline(const char32_t it) noexcept
     {
         return it == '\n';

@@ -31,7 +31,6 @@ namespace lcl
             {
                 //One character tokens
                 case '`':
-                case '\n':
                 case '~':
                 case '!':
                 case '@':
@@ -65,9 +64,12 @@ namespace lcl
                     continue;
                 }
 
-                case ' ':
+                case '\t':
+                case '\r':
+                case '\n':
+                case ' ' :
                 {
-                    code_iterator = std::find_if_not(code_iterator, code_end, lcl::chars::is_white_space_not_newline);
+                    code_iterator = std::find_if_not(code_iterator, code_end, lcl::chars::is_white_space);
                     
                     continue;
                 }

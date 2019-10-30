@@ -75,7 +75,6 @@ namespace lcl
         numeric_literal,       // 123
         
         backtick,              // `
-        newline,               // /n
         tilde,                 // ~
         exclamation_mark,      // !
         at_symbol,             // @
@@ -108,7 +107,6 @@ namespace lcl
     constexpr auto single_char_tokens_as_chars = lcl::utils::make_array
     (
         '`',
-        '\n',
         '~',
         '!',
         '@',
@@ -140,7 +138,6 @@ namespace lcl
     constexpr auto single_char_tokens = lcl::utils::make_array<std::string_view>
     (
         "`",
-        "\n",
         "~",
         "!",
         "@",
@@ -172,7 +169,6 @@ namespace lcl
     constexpr auto single_char_token_types = lcl::utils::make_array
     (
         lcl::token_type::backtick,
-        lcl::token_type::newline,
         lcl::token_type::tilde,
         lcl::token_type::exclamation_mark,
         lcl::token_type::at_symbol,
@@ -207,7 +203,6 @@ namespace lcl
         switch (it)
         {
             case lcl::token_type::backtick:
-            case lcl::token_type::newline:
             case lcl::token_type::tilde:
             case lcl::token_type::exclamation_mark:
             case lcl::token_type::at_symbol:
@@ -246,7 +241,6 @@ namespace lcl
         switch (it)
         {
             case '`' :
-            case '\n':
             case '~' :
             case '!' :
             case '@' :
@@ -287,7 +281,6 @@ namespace lcl
         switch (it)
         {
             case lcl::token_type::backtick: return '`';
-            case lcl::token_type::newline: return '\n';
             case lcl::token_type::tilde: return '~';
             case lcl::token_type::exclamation_mark: return '!';
             case lcl::token_type::at_symbol: return '@';
@@ -328,7 +321,6 @@ namespace lcl
         switch (it)
         {
             case '`' : return lcl::token_type::backtick;
-            case '\n': return lcl::token_type::newline;
             case '~' : return lcl::token_type::tilde;
             case '!' : return lcl::token_type::exclamation_mark;
             case '@' : return lcl::token_type::at_symbol;

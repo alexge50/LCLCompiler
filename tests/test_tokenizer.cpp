@@ -15,35 +15,6 @@ void test_tokenization_of_whitespace()
     assert(result.size() == 0);
 }
 
-void test_tokenization_of_newline()
-{
-    {
-        const auto source = "\n"sv;
-        const auto result = lcl::tokenize_code(source);
-    
-        assert(result.size() == 1);
-
-        assert(result[0].type        == lcl::token_type::newline);
-        assert(result[0].code.size() == source.size());
-        assert(result[0].code        == source);
-    }
-
-    {
-        const auto source = "\n \n        "sv;
-        const auto result = lcl::tokenize_code(source);
-    
-        assert(result.size() == 2);
-
-        assert(result[0].type        == lcl::token_type::newline);
-        assert(result[0].code.size() == 1);
-        assert(result[0].code        == "\n");
-
-        assert(result[1].type        == lcl::token_type::newline);
-        assert(result[1].code.size() == 1);
-        assert(result[1].code        == "\n");
-    }
-}
-
 void test_tokenization_of_single_line_comment()
 {
     const auto source = "////Test漢語"sv;
@@ -253,18 +224,17 @@ void test_tokenization_of_complex_example()
 
     const auto expected_token_types = lcl::utils::make_array
     (
-        lcl::token_type::newline,
-        lcl::token_type::word, lcl::token_type::word, lcl::token_type::colon, lcl::token_type::star, lcl::token_type::semicolon, lcl::token_type::newline, 
-        lcl::token_type::newline,
-        lcl::token_type::word, lcl::token_type::colon, lcl::token_type::colon, lcl::token_type::open_parans, lcl::token_type::close_parans, lcl::token_type::minus, lcl::token_type::right_arrow, lcl::token_type::word, lcl::token_type::newline, 
-        lcl::token_type::open_curly, lcl::token_type::newline,
-        lcl::token_type::word, lcl::token_type::colon, lcl::token_type::equal, lcl::token_type::numeric_literal, lcl::token_type::semicolon, lcl::token_type::newline,
-        lcl::token_type::newline,
-        lcl::token_type::word, lcl::token_type::open_parans, lcl::token_type::word, lcl::token_type::equal, lcl::token_type::equal, lcl::token_type::numeric_literal, lcl::token_type::close_parans, lcl::token_type::newline,
-        lcl::token_type::open_curly, lcl::token_type::newline,
-        lcl::token_type::word, lcl::token_type::open_parans, lcl::token_type::string_literal, lcl::token_type::close_parans, lcl::token_type::semicolon, lcl::token_type::newline,
-        lcl::token_type::close_curly, lcl::token_type::newline,
-        lcl::token_type::close_curly, lcl::token_type::newline 
+        lcl::token_type::word, lcl::token_type::word, lcl::token_type::colon, lcl::token_type::star, lcl::token_type::semicolon,  
+   
+        lcl::token_type::word, lcl::token_type::colon, lcl::token_type::colon, lcl::token_type::open_parans, lcl::token_type::close_parans, lcl::token_type::minus, lcl::token_type::right_arrow, lcl::token_type::word,  
+        lcl::token_type::open_curly, 
+        lcl::token_type::word, lcl::token_type::colon, lcl::token_type::equal, lcl::token_type::numeric_literal, lcl::token_type::semicolon, 
+        
+        lcl::token_type::word, lcl::token_type::open_parans, lcl::token_type::word, lcl::token_type::equal, lcl::token_type::equal, lcl::token_type::numeric_literal, lcl::token_type::close_parans, 
+        lcl::token_type::open_curly, 
+        lcl::token_type::word, lcl::token_type::open_parans, lcl::token_type::string_literal, lcl::token_type::close_parans, lcl::token_type::semicolon, 
+        lcl::token_type::close_curly, 
+        lcl::token_type::close_curly
     );
 
     const auto result = lcl::tokenize_code(source);
@@ -294,14 +264,14 @@ void test_tokenization_of_complex_example()
         {
             switch (token_index)
             {
-                case  1: assert(token.is_keyword()    && token.code == "import"); break;
+                case  0: assert(token.is_keyword()    && token.code == "import"); break;
                 case  2: assert(token.is_identifier() && token.code == "Print");  break;
-                case  8: assert(token.is_identifier() && token.code == "main");   break;
-                case 15: assert(token.is_keyword()    && token.code == "void");   break;
-                case 19: assert(token.is_identifier() && token.code == "hello");  break;
-                case 26: assert(token.is_keyword()    && token.code == "while");  break;
-                case 28: assert(token.is_identifier() && token.code == "hello");  break;
-                case 36: assert(token.is_identifier() && token.code == "print");  break;
+                case  6: assert(token.is_identifier() && token.code == "main");   break;
+                case 13: assert(token.is_keyword()    && token.code == "void");   break;
+                case 15: assert(token.is_identifier() && token.code == "hello");  break;
+                case 20: assert(token.is_keyword()    && token.code == "while");  break;
+                case 22: assert(token.is_identifier() && token.code == "hello");  break;
+                case 28: assert(token.is_identifier() && token.code == "print");  break;
             }
         }
     }
