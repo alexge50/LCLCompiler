@@ -297,7 +297,7 @@ namespace lcl
         }
     }
 
-    [[nodiscard]] constexpr auto get_single_char_represented_by_token_type(const lcl::token_type it) noexcept -> bool
+    [[nodiscard]] constexpr auto get_single_char_represented_by_token_type(const lcl::token_type it) noexcept -> char
     {
         assert(is_token_type_representing_a_single_char(it));
 

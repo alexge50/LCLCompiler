@@ -1,17 +1,26 @@
 #include <cassert>
+#include <string_view>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <magic_enum/magic_enum.hpp>
-#include <tcb/span.hpp>
+#include <gsl/span>
 
 #include <tokenizer.hpp>
 #include <ast.hpp>
 
+using namespace std::string_view_literals;
+
 auto main() -> int
 {
-    fmt::print("Hello, {}!", "world");
-    fmt::print(magic_enum::enum_name(lcl::token_type::open_curly));
+    const auto code                = "import Print: print, printf;"sv;
+    const auto tokens              = lcl::tokenize_code(code).value();
+    const auto ast                 = lcl::import_statement_ast { code, tokens };
+
+    for (const auto& it : ast.module_imports())
+    {
+        fmt::print("{} ", it);
+    }
 
     return 0;
 }
