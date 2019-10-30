@@ -148,20 +148,105 @@ TEST_CASE("Tokenization of multi line comment", "[tokenizer]")
         REQUIRE(result[0].code == code);
         REQUIRE(result[0].is_multi_line_comment());
     }
+
+    SECTION("Tokenization failure")
+    {
+        SECTION("Multi line comment not closed")
+        {
+            const auto code = "/*"sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::multi_line_comment_not_closed);
+        }
+
+        SECTION("Multi line comment, with unclosed nested comment, not closed")
+        {
+            const auto code = "/* /*"sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::multi_line_comment_not_closed);
+        }
+
+        SECTION("Multi line comment, with nested comment, not closed")
+        {
+            const auto code = "/* /* */"sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::multi_line_comment_not_closed);
+        }
+    }
 }
 
 TEST_CASE("Tokenization of string", "[tokenizer]")
 {
-    const auto code = "\"Test\""sv;
-    const auto expected_result = lcl::tokenize_code(code);
-    REQUIRE(expected_result.has_value());
-    const auto result = *expected_result;
+    SECTION("Empty string")
+    {
+        const auto code = "\"\""sv;
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
-    REQUIRE(result.size() == 1);
+        REQUIRE(result.size() == 1);
 
-    REQUIRE(result[0].type == lcl::token_type::string_literal);
-    REQUIRE(result[0].code == code);
-    REQUIRE(result[0].is_string_literal());
+        REQUIRE(result[0].type == lcl::token_type::string_literal);
+        REQUIRE(result[0].code == code);
+        REQUIRE(result[0].is_string_literal());    
+    }
+
+    SECTION("Test string")
+    {
+        const auto code = "\"Test\""sv;
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
+
+        REQUIRE(result.size() == 1);
+
+        REQUIRE(result[0].type == lcl::token_type::string_literal);
+        REQUIRE(result[0].code == code);
+        REQUIRE(result[0].is_string_literal());
+    }
+
+    SECTION("String with escaped quotations")
+    {
+        const auto code = "\"\\\"Test\\\"\""sv;
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
+
+        REQUIRE(result.size() == 1);
+
+        REQUIRE(result[0].type == lcl::token_type::string_literal);
+        REQUIRE(result[0].code == code);
+        REQUIRE(result[0].is_string_literal());
+    }
+
+    SECTION("Tokenization failure")
+    {
+        SECTION("String with newline")
+        {
+            const auto code = "\"Test\n\""sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::newline_in_string_literal);
+        }
+
+        SECTION("String with null character")
+        {
+            const auto code = "\"Test\0\""sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::null_character_in_string_literal);
+        }
+
+        SECTION("String not closed")
+        {
+            const auto code = "\"Test"sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::string_literal_not_closed_properly);
+        }
+    }
 }
 
 TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
@@ -177,7 +262,6 @@ TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
 
         REQUIRE(result[0].type == lcl::token_type::numeric_literal);
         REQUIRE(result[0].code == code);
-        REQUIRE(result[0].is_numeric_literal());
         REQUIRE(result[0].is_int_literal());
     }
 
@@ -192,12 +276,10 @@ TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
         
         REQUIRE(result[0].type == lcl::token_type::numeric_literal);
         REQUIRE(result[0].code == "1801"sv);
-        REQUIRE(result[0].is_numeric_literal());
         REQUIRE(result[0].is_int_literal());
 
         REQUIRE(result[1].type == lcl::token_type::numeric_literal);
         REQUIRE(result[1].code == "83274"sv);
-        REQUIRE(result[1].is_numeric_literal());
         REQUIRE(result[1].is_int_literal());
     }
 
@@ -212,7 +294,6 @@ TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
         
         REQUIRE(result[0].type == lcl::token_type::numeric_literal);
         REQUIRE(result[0].code == "1801_83274"sv);
-        REQUIRE(result[0].is_numeric_literal());
         REQUIRE(result[0].is_int_literal());
     }
 
@@ -227,8 +308,123 @@ TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
         
         REQUIRE(result[0].type == lcl::token_type::numeric_literal);
         REQUIRE(result[0].code == "1801.83274"sv);
-        REQUIRE(result[0].is_numeric_literal());
         REQUIRE(result[0].is_float_literal());
+    }
+
+    SECTION("Numeric literal ends in dot")
+    {
+        const auto code = "1."sv;
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
+
+        REQUIRE(result.size() == 2);
+
+        REQUIRE(result[0].type == lcl::token_type::numeric_literal);
+        REQUIRE(result[0].code == "1"sv);
+        REQUIRE(result[0].is_int_literal());
+
+        REQUIRE(result[1].type == lcl::token_type::dot);
+        REQUIRE(result[1].code == "."sv);
+    }
+
+    SECTION("Numeric literal ends in 2 dots")
+    {
+        const auto code = "1.."sv;
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
+
+        REQUIRE(result.size() == 3);
+
+        REQUIRE(result[0].type == lcl::token_type::numeric_literal);
+        REQUIRE(result[0].code == "1"sv);
+        REQUIRE(result[0].is_int_literal());
+
+        REQUIRE(result[1].type == lcl::token_type::dot);
+        REQUIRE(result[1].code == "."sv);
+
+        REQUIRE(result[2].type == lcl::token_type::dot);
+        REQUIRE(result[2].code == "."sv);
+    }
+
+    SECTION("Floating point literal ends in dot")
+    {
+        const auto code = "1.0."sv;
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
+
+        REQUIRE(result.size() == 2);
+
+        REQUIRE(result[0].type == lcl::token_type::numeric_literal);
+        REQUIRE(result[0].code == "1.0"sv);
+        REQUIRE(result[0].is_float_literal());
+
+        REQUIRE(result[1].type == lcl::token_type::dot);
+        REQUIRE(result[1].code == "."sv);
+    }
+
+    SECTION("Numeric literal with 2 inner dots")
+    {
+        const auto code = "1.0.0"sv;
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
+
+        REQUIRE(result.size() == 3);
+
+        REQUIRE(result[0].type == lcl::token_type::numeric_literal);
+        REQUIRE(result[0].code == "1.0"sv);
+        REQUIRE(result[0].is_float_literal());
+
+        REQUIRE(result[1].type == lcl::token_type::dot);
+        REQUIRE(result[1].code == "."sv);
+
+        REQUIRE(result[2].type == lcl::token_type::numeric_literal);
+        REQUIRE(result[2].code == "0"sv);
+        REQUIRE(result[2].is_int_literal());
+    }
+
+    SECTION("Numeric literal with dot and underscore")
+    {
+        const auto code = "1__0_._0"sv;
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
+
+        REQUIRE(result.size() == 1);
+
+        REQUIRE(result[0].type == lcl::token_type::numeric_literal);
+        REQUIRE(result[0].code == code);
+        REQUIRE(result[0].is_float_literal());
+    }
+
+    SECTION("Tokenization failure")
+    {
+        SECTION("Numeric literal ends with unexpected character")
+        {
+            const auto code = "1a"sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::numeric_literal_contains_unexpected_character);
+        }
+
+        SECTION("Numeric literal contains unexpected character")
+        {
+            const auto code = "1a1"sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::numeric_literal_contains_unexpected_character);
+        }
+
+        SECTION("Numeric literal ends with underscore")
+        {
+            const auto code = "1_0_"sv;
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(!expected_result.has_value());
+            REQUIRE(expected_result.error().error_type == lcl::tokenizer_error_type::numeric_literal_ends_with_underscore);
+        }
     }
 }
 

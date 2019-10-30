@@ -23,7 +23,7 @@ namespace lcl
 
         const auto add_one_char_token = [&] (const lcl::token_type tk_type) 
         { 
-            tokens.emplace_back(tk_type, lcl::utils::string_view_from_iterator(code_iterator, std::next(code_iterator))); 
+            tokens.emplace_back(tk_type, utils::string_view_from_iterator(code_iterator, std::next(code_iterator))); 
             code_iterator = std::next(code_iterator);
         };
 
@@ -60,7 +60,7 @@ namespace lcl
                 //case '/': We dont handle / here because it is used to produce comments
                 case '\\':
                 {
-                    tokens.emplace_back(lcl::get_token_type_that_represents_char(*code_iterator), lcl::utils::string_view_from_iterator(code_iterator, std::next(code_iterator))); 
+                    tokens.emplace_back(lcl::get_token_type_that_represents_char(*code_iterator), utils::string_view_from_iterator(code_iterator, std::next(code_iterator))); 
                     code_iterator = std::next(code_iterator);
                     
                     continue;
@@ -71,7 +71,7 @@ namespace lcl
                 case '\n':
                 case ' ' :
                 {
-                    code_iterator = std::find_if_not(code_iterator, code_end, lcl::chars::is_white_space);
+                    code_iterator = std::find_if_not(code_iterator, code_end, chars::is_white_space);
                     
                     continue;
                 }
@@ -84,7 +84,7 @@ namespace lcl
 
                     if (!should_tokenize_comment)
                     {
-                        tokens.emplace_back(lcl::token_type::forward_slash, lcl::utils::string_view_from_iterator(iterator_to_initial_forward_slash, 1));
+                        tokens.emplace_back(lcl::token_type::forward_slash, utils::string_view_from_iterator(iterator_to_initial_forward_slash, 1));
                         code_iterator = std::next(code_iterator);
 
                         continue;
@@ -97,7 +97,7 @@ namespace lcl
                             const auto commend_begin = iterator_to_initial_forward_slash;
                             const auto comment_end   = std::find(iterator_after_initial_forward_slash, code_end, '\n');
                             
-                            tokens.emplace_back(lcl::token_type::comment, lcl::utils::string_view_from_iterator(commend_begin, comment_end));
+                            tokens.emplace_back(lcl::token_type::comment, utils::string_view_from_iterator(commend_begin, comment_end));
                             code_iterator = comment_end;
 
                             continue;
@@ -123,7 +123,7 @@ namespace lcl
                                 //We look at 2 chars at a time, advance by one char. Eg: for "Test" we will look at the views: [ "Te", "es", "st" ]
                                 for (auto i = 0; i < code_to_look_at_for_comment_closer_length - 1; ++i)
                                 {
-                                    const auto view = lcl::utils::string_view_from_iterator(std::next(code_to_look_at_for_comment_closer_begin, i), 2);
+                                    const auto view = utils::string_view_from_iterator(std::next(code_to_look_at_for_comment_closer_begin, i), 2);
 
                                     if (view == "/*")
                                     {
@@ -161,7 +161,7 @@ namespace lcl
 
                             const auto comment_end = std::next(*expected_iterator_to_comment_closer_slash);
 
-                            tokens.emplace_back(lcl::token_type::comment, lcl::utils::string_view_from_iterator(comment_begin, comment_end));
+                            tokens.emplace_back(lcl::token_type::comment, utils::string_view_from_iterator(comment_begin, comment_end));
                             code_iterator = comment_end;
 
                             continue;
@@ -184,7 +184,7 @@ namespace lcl
                         {
                             const auto char_at_it = *it;
 
-                            if (lcl::chars::is_newline(char_at_it))
+                            if (chars::is_newline(char_at_it))
                             {
                                 return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::newline_in_string_literal, string_begin });
                             }
@@ -233,7 +233,7 @@ namespace lcl
 
                     const auto string_end = std::next(*expected_iterator_to_string_closer);
 
-                    tokens.emplace_back(lcl::token_type::string_literal, lcl::utils::string_view_from_iterator(string_begin, string_end));
+                    tokens.emplace_back(lcl::token_type::string_literal, utils::string_view_from_iterator(string_begin, string_end));
                     code_iterator = string_end;
 
                     continue;
@@ -241,25 +241,111 @@ namespace lcl
 
                 default: 
                 {
-                    if (lcl::chars::is_ascii_digit(*code_iterator))
+                    if (chars::is_ascii_digit(*code_iterator))
                     {
-                        if (*code_iterator == '0')
-                        {
-                            return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::numeric_literal_starts_with_0, code_iterator });
-                        }
+                        /*
+                        1 - Number
+                        1.0 - Number
+                        1.0. - Number dot
+                        1.0.0 - Number dot number
+                        */
                         
                         const auto numeric_literal_begin = code_iterator;
-                        const auto numeric_literal_end   = std::find_if_not(numeric_literal_begin, code_end, lcl::is_valid_mid_character_in_numeric_literal);
+                        
+                        auto dot_encountered     = false;
+                        auto prev_was_dot        = false;
+                        auto prev_was_underscore = false;
+                        auto it                  = numeric_literal_begin;
 
-                        tokens.emplace_back(lcl::token_type::numeric_literal, lcl::utils::string_view_from_iterator(numeric_literal_begin, numeric_literal_end));
-                        code_iterator = numeric_literal_end;
+                        for (; it < code_end; it = std::next(it))
+                        {
+                            if (*it == '.')
+                            {
+                                //Here we take the numbers up to the previous dot as a numeric literal and advance the code_iterator up to the previous dot and keep tokenizing from there
+                                //Eg: 1.. -> [numeric_literal, dot, dot]
+                                if (prev_was_dot)
+                                {
+                                    prev_was_dot = false;
+
+                                    const auto iterator_to_prev_dot = std::prev(it);
+                                    tokens.emplace_back(lcl::token_type::numeric_literal, utils::string_view_from_iterator(numeric_literal_begin, iterator_to_prev_dot));
+                                    code_iterator = iterator_to_prev_dot;
+                                    break;
+                                }
+                                
+                                //We end the number here and keep tokenizing from this dot
+                                //Eg: 1.0.0 -> [numeric_literal, dot, numeric_literal]
+                                if (dot_encountered) 
+                                {
+                                    tokens.emplace_back(lcl::token_type::numeric_literal, utils::string_view_from_iterator(numeric_literal_begin, it));
+                                    code_iterator = it;
+                                    break;
+                                }
+
+                                prev_was_dot    = true;
+                                dot_encountered = true;
+                            }
+                            else if (*it == '_')
+                            {
+                                prev_was_underscore = true;
+                            }
+                            else if (chars::is_ascii_digit(*it))
+                            {
+                                prev_was_dot        = false;
+                                prev_was_underscore = false;
+                            }
+                            else //if not valid character in number
+                            {
+                                //This dot should not be parsed as part of the number
+                                if (prev_was_dot)
+                                {
+                                    const auto iterator_prev_was_dot = std::prev(it);
+                                    tokens.emplace_back(lcl::token_type::numeric_literal, utils::string_view_from_iterator(numeric_literal_begin, iterator_prev_was_dot));
+                                    code_iterator = iterator_prev_was_dot;
+                                }
+                                else if (prev_was_underscore)
+                                {
+                                    return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::numeric_literal_ends_with_underscore, numeric_literal_begin });
+                                }
+                                else //if unexpected character
+                                {
+                                    if (!lcl::is_single_char_represented_by_token_type(*it) && !chars::is_white_space(*it))
+                                    {
+                                        return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::numeric_literal_contains_unexpected_character, numeric_literal_begin });
+                                    }
+
+                                    tokens.emplace_back(lcl::token_type::numeric_literal, utils::string_view_from_iterator(numeric_literal_begin, it));
+                                    code_iterator = it;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Here we take the numbers up to the previous dot as a numeric literal and advance the code_iterator up to the previous dot and keep tokenizing from there
+                        //Eg: 1.. -> [numeric_literal, dot, dot]
+                        if (prev_was_dot)
+                        {
+                            const auto iterator_to_prev_dot = std::prev(it);
+                            tokens.emplace_back(lcl::token_type::numeric_literal, utils::string_view_from_iterator(numeric_literal_begin, iterator_to_prev_dot));
+                            code_iterator = iterator_to_prev_dot;
+                        }
+                        else if (prev_was_underscore)
+                        {
+                            return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::numeric_literal_ends_with_underscore, numeric_literal_begin });
+                        }
+                        else if (it == code_end)
+                        {
+                            //If we reached the end of the code without problem
+                            tokens.emplace_back(lcl::token_type::numeric_literal, utils::string_view_from_iterator(numeric_literal_begin, code_end));
+                            code_iterator = code_end;
+                        }
                     }
                     else if (lcl::is_valid_first_character_in_word(*code_iterator))
                     {
                         const auto word_literal_begin = code_iterator;
                         const auto word_literal_end   = std::find_if_not(word_literal_begin, code_end, lcl::is_valid_mid_character_in_word);
 
-                        tokens.emplace_back(lcl::token_type::word, lcl::utils::string_view_from_iterator(word_literal_begin, word_literal_end));
+                        tokens.emplace_back(lcl::token_type::word, utils::string_view_from_iterator(word_literal_begin, word_literal_end));
                         code_iterator = word_literal_end;
                     }
                 }

@@ -17,7 +17,8 @@ namespace lcl
         newline_in_string_literal,
         null_character_in_string_literal,
         string_literal_not_closed_properly,
-        numeric_literal_starts_with_0,
+        numeric_literal_ends_with_underscore,
+        numeric_literal_contains_unexpected_character,
     };
 
     struct tokenizer_error
@@ -471,17 +472,17 @@ namespace lcl
 
     [[nodiscard]] constexpr bool is_valid_first_character_in_word(const char32_t it) noexcept
     {
-        return lcl::chars::is_ascii_letter(it) || it == '_';
+        return chars::is_ascii_letter(it) || it == '_';
     }
 
     [[nodiscard]] constexpr bool is_valid_mid_character_in_word(const char32_t it) noexcept
     {
-        return lcl::chars::is_ascii_letter(it) || lcl::chars::is_ascii_digit(it) || it == '_';
+        return chars::is_ascii_letter(it) || chars::is_ascii_digit(it) || it == '_';
     }
 
     [[nodiscard]] constexpr bool is_valid_mid_character_in_numeric_literal(const char32_t it) noexcept
     {
-        return lcl::chars::is_ascii_digit(it) || it == '.' || it == '_';
+        return chars::is_ascii_digit(it) || it == '.' || it == '_';
     }
 
     [[nodiscard]] tl::expected<std::vector<lcl::token>, lcl::tokenizer_error> tokenize_code(const std::string_view& code);
