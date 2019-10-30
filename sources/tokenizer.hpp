@@ -4,11 +4,33 @@
 #include <vector>
 #include <string_view>
 
+#include <tl/expected.hpp>
+
 #include <chars.hpp>
 #include <std_utils.hpp>
 
 namespace lcl
 {
+    enum class tokenizer_error_type
+    {
+        multi_line_comment_not_closed,
+        newline_in_string_literal,
+        null_character_in_string_literal,
+        string_literal_not_closed_properly,
+        numeric_literal_starts_with_0,
+    };
+
+    struct tokenizer_error
+    {
+        const lcl::tokenizer_error_type        error_type;
+        const std::string_view::const_iterator iterator_when_error_occured;
+
+        constexpr tokenizer_error(const lcl::tokenizer_error_type error_type, const std::string_view::const_iterator iterator_when_error_occured) : error_type(error_type), iterator_when_error_occured(iterator_when_error_occured) 
+        {
+            //Empty
+        }
+    };
+
     constexpr auto keywords = lcl::utils::make_array<std::string_view>
     (
         "alignof",
@@ -462,7 +484,7 @@ namespace lcl
         return lcl::chars::is_ascii_digit(it) || it == '.' || it == '_';
     }
 
-    [[nodiscard]] std::vector<lcl::token> tokenize_code(const std::string_view& code);
+    [[nodiscard]] tl::expected<std::vector<lcl::token>, lcl::tokenizer_error> tokenize_code(const std::string_view& code);
 }
 
 #endif //LCLCOMPILER_TOKENIZER_HPP

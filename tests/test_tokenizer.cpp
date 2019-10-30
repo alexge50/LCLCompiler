@@ -1,6 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
+#include <tl/expected.hpp>
+
 #include <tokenizer.hpp>
 #include <std_utils.hpp>
 
@@ -8,8 +10,10 @@ using namespace std::string_view_literals;
 
 TEST_CASE("Tokenization of whitespace", "[tokenizer]")
 {
-    const auto code = "    \r\t"sv;
-    const auto result = lcl::tokenize_code(code);
+    const auto code            = "    \r\t"sv;
+    const auto expected_result = lcl::tokenize_code(code);
+    REQUIRE(expected_result.has_value());
+    const auto result = *expected_result;
  
     REQUIRE(result.size() == 0);    
 }
@@ -19,7 +23,9 @@ TEST_CASE("Tokenization of single line comment", "[tokenizer]")
     SECTION("Empty comment")
     {
         const auto code = "//"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
     
         REQUIRE(result.size() == 1);
 
@@ -30,7 +36,9 @@ TEST_CASE("Tokenization of single line comment", "[tokenizer]")
     SECTION("Comment with text")
     {
         const auto code = "//Test"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 1);
 
@@ -41,7 +49,9 @@ TEST_CASE("Tokenization of single line comment", "[tokenizer]")
     SECTION("Comment with extra forward slashes")
     {
         const auto code = "////Test"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 1);
 
@@ -52,7 +62,9 @@ TEST_CASE("Tokenization of single line comment", "[tokenizer]")
     SECTION("Comment with weird characters")
     {
         const auto code = "////Test漢語"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 1);
 
@@ -63,7 +75,9 @@ TEST_CASE("Tokenization of single line comment", "[tokenizer]")
     SECTION("Single line comment with multi line comment opener")
     {
         const auto code = "////Test漢語 /* "sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 1);
 
@@ -77,8 +91,9 @@ TEST_CASE("Tokenization of single line comment", "[tokenizer]")
         const auto first_comment_code  = "//Test "sv;
         const auto second_comment_code = "//Test"sv;
 
-        const auto result = lcl::tokenize_code(code);
-
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 2);
 
@@ -95,7 +110,9 @@ TEST_CASE("Tokenization of multi line comment", "[tokenizer]")
     SECTION("Multi line comment with no text")
     {
         const auto code = "/* \n\n\n */"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
     
         REQUIRE(result.size() == 1);
 
@@ -107,7 +124,9 @@ TEST_CASE("Tokenization of multi line comment", "[tokenizer]")
     SECTION("Multi line comment with a regular nested comment")
     {
         const auto code = "/* //Test漢語 \n\n\n */"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
     
         REQUIRE(result.size() == 1);
 
@@ -119,7 +138,9 @@ TEST_CASE("Tokenization of multi line comment", "[tokenizer]")
     SECTION("Multi line comment with nested multi line comments")
     {
         const auto code = "/* //Test漢語 /* inner comment */ // // /* // */\n\n\n */"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
     
         REQUIRE(result.size() == 1);
 
@@ -132,7 +153,9 @@ TEST_CASE("Tokenization of multi line comment", "[tokenizer]")
 TEST_CASE("Tokenization of string", "[tokenizer]")
 {
     const auto code = "\"Test\""sv;
-    const auto result = lcl::tokenize_code(code);
+    const auto expected_result = lcl::tokenize_code(code);
+    REQUIRE(expected_result.has_value());
+    const auto result = *expected_result;
 
     REQUIRE(result.size() == 1);
 
@@ -146,7 +169,9 @@ TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
     SECTION("Single numeric literal")
     {
         const auto code = "1801"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 1);
 
@@ -159,7 +184,9 @@ TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
     SECTION("Two numeric literals")
     {
         const auto code = "1801 83274"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 2);
         
@@ -177,7 +204,9 @@ TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
     SECTION("Numeric literal with underscore")
     {
         const auto code = "1801_83274"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 1);
         
@@ -190,7 +219,9 @@ TEST_CASE("Tokenization of numeric literals", "[tokenizer]")
     SECTION("Floating point literal")
     {
         const auto code = "1801.83274"sv;
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 1);
         
@@ -207,7 +238,9 @@ TEST_CASE("Tokenization of single char tokens", "[tokenizer]")
     {
         for (const auto code : lcl::single_char_tokens)
         {
-            const auto result = lcl::tokenize_code(code);
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(expected_result.has_value());
+            const auto result = *expected_result;
 
             REQUIRE(result.size() == 1);
             
@@ -230,7 +263,9 @@ TEST_CASE("Tokenization of single char tokens", "[tokenizer]")
             }
 
             const auto code = std::string { it } + std::string { it } + std::string { it };
-            const auto result = lcl::tokenize_code(code);
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(expected_result.has_value());
+            const auto result = *expected_result;
 
             REQUIRE(result.size() == 3);
             
@@ -250,7 +285,9 @@ TEST_CASE("Tokenization of words", "[tokenizer]")
     {
         const auto code = "test";
 
-        const auto result = lcl::tokenize_code(code);
+        const auto expected_result = lcl::tokenize_code(code);
+        REQUIRE(expected_result.has_value());
+        const auto result = *expected_result;
 
         REQUIRE(result.size() == 1);
         
@@ -264,7 +301,9 @@ TEST_CASE("Tokenization of words", "[tokenizer]")
     {
         for (const auto code : lcl::keywords)
         {
-            const auto result = lcl::tokenize_code(code);
+            const auto expected_result = lcl::tokenize_code(code);
+            REQUIRE(expected_result.has_value());
+            const auto result = *expected_result;
 
             REQUIRE(result.size() == 1);
             
@@ -307,7 +346,9 @@ TEST_CASE("Tokenization of complex example", "[tokenizer]")
         lcl::token_type::close_curly
     );
 
-    const auto result = lcl::tokenize_code(code);
+    const auto expected_result = lcl::tokenize_code(code);
+    REQUIRE(expected_result.has_value());
+    const auto result = *expected_result;
 
     SECTION("Tokens match")
     {

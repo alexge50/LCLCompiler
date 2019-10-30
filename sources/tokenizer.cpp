@@ -5,13 +5,15 @@
 #include <functional>
 #include <cassert>
 
+#include <tl/expected.hpp>
+
 #include <std_utils.hpp>
 #include <tokenizer.hpp>
 #include <chars.hpp>
 
 namespace lcl
 {
-    [[nodiscard]] std::vector<token> tokenize_code(const std::string_view& code)
+    [[nodiscard]] tl::expected<std::vector<lcl::token>, lcl::tokenizer_error> tokenize_code(const std::string_view& code)
     {
         const auto code_begin = std::cbegin(code);
         const auto code_end   = std::cend(code);
@@ -109,7 +111,7 @@ namespace lcl
                             //A multiline comment ends with `*/`.
                             //This procedure will return an iterator to the slash at the end of the close `*/` or `code_end` in case it was not found.
                             //This procedure also takes into account nested comments. 
-                            const auto iterator_to_comment_closer_slash = [&] () -> std::string_view::const_iterator 
+                            const auto expected_iterator_to_comment_closer_slash = [&] () -> tl::expected<std::string_view::const_iterator, lcl::tokenizer_error> 
                             {
                                 //We ignore the initial `/*` so we start 2 chars ahead to look for the end `*/` of the comment.
                                 const auto code_to_look_at_for_comment_closer_begin  = std::next(comment_begin, 2);
@@ -149,13 +151,15 @@ namespace lcl
                                     }
                                 }
 
-                                return code_end;
+                                return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::multi_line_comment_not_closed, comment_begin }); 
                             }();
 
-                            //@Todo: Error handling
-                            assert(iterator_to_comment_closer_slash != code_end);
+                            if (!expected_iterator_to_comment_closer_slash)
+                            {
+                                return tl::unexpected(expected_iterator_to_comment_closer_slash.error());
+                            }
 
-                            const auto comment_end = std::next(iterator_to_comment_closer_slash);
+                            const auto comment_end = std::next(*expected_iterator_to_comment_closer_slash);
 
                             tokens.emplace_back(lcl::token_type::comment, lcl::utils::string_view_from_iterator(comment_begin, comment_end));
                             code_iterator = comment_end;
@@ -169,48 +173,65 @@ namespace lcl
                 {
                     const auto string_begin = code_iterator;
                     
-                    //Used to mark if the next character should be escaped, such as `\"`
-                    auto escape_next_character = false;
                     //This proc will return an iterator to the closing `"` or code_end if the string isn't closed properly.
                     //We start looking after the first `"`.
-                    const auto iterator_to_string_closer = std::find_if(std::next(string_begin), code_end, [&escape_next_character] (const char& it) mutable -> bool 
-                    { 
-                        //@Todo: Error handling
-                        assert(!lcl::chars::is_newline(it) && it != 0);
+                    const auto expected_iterator_to_string_closer = [&] () -> tl::expected<std::string_view::const_iterator, lcl::tokenizer_error> 
+                    {
+                        //Used to mark if the next character should be escaped, such as `\"`
+                        auto escape_next_character = false;
 
-                        switch (it)
+                        for (auto it = std::next(string_begin); it < code_end; it = std::next(it))
                         {
-                            case '\\': 
+                            const auto char_at_it = *it;
+
+                            if (lcl::chars::is_newline(char_at_it))
                             {
-                                escape_next_character = true; 
-                                return false;
+                                return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::newline_in_string_literal, string_begin });
                             }
 
-                            case '"' : 
+                            if (char_at_it  == 0)
                             {
-                                if (escape_next_character) 
-                                { 
-                                    escape_next_character = false;
-                                    return false; 
-                                } 
-                                else 
-                                { 
-                                    return true; 
+                                return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::null_character_in_string_literal, string_begin });
+                            }
+
+                            switch (char_at_it )
+                            {
+                                case '\\': 
+                                {
+                                    escape_next_character = true; 
+                                    continue;
+                                }
+
+                                case '"' : 
+                                {
+                                    if (escape_next_character) 
+                                    { 
+                                        escape_next_character = false;
+                                        continue; 
+                                    } 
+                                    else 
+                                    { 
+                                        return it;
+                                    }
+                                }
+
+                                default: 
+                                {
+                                    escape_next_character = false; 
+                                    continue;
                                 }
                             }
-
-                            default: 
-                            {
-                                escape_next_character = false; 
-                                return false;
-                            }
                         }
-                    });
 
-                    //@Todo: Error handling
-                    assert(iterator_to_string_closer != code_end);
+                        return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::string_literal_not_closed_properly, string_begin });
+                    }();
 
-                    const auto string_end = std::next(iterator_to_string_closer);
+                    if (!expected_iterator_to_string_closer)
+                    {
+                        return tl::unexpected(expected_iterator_to_string_closer.error());
+                    }
+
+                    const auto string_end = std::next(*expected_iterator_to_string_closer);
 
                     tokens.emplace_back(lcl::token_type::string_literal, lcl::utils::string_view_from_iterator(string_begin, string_end));
                     code_iterator = string_end;
@@ -222,8 +243,10 @@ namespace lcl
                 {
                     if (lcl::chars::is_ascii_digit(*code_iterator))
                     {
-                        //@Todo: Error handling
-                        assert(*code_iterator != '0');
+                        if (*code_iterator == '0')
+                        {
+                            return tl::unexpected(lcl::tokenizer_error { lcl::tokenizer_error_type::numeric_literal_starts_with_0, code_iterator });
+                        }
                         
                         const auto numeric_literal_begin = code_iterator;
                         const auto numeric_literal_end   = std::find_if_not(numeric_literal_begin, code_end, lcl::is_valid_mid_character_in_numeric_literal);
