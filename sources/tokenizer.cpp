@@ -222,6 +222,9 @@ namespace lcl
                 {
                     if (lcl::chars::is_ascii_digit(*code_iterator))
                     {
+                        //@Todo: Error handling
+                        assert(*code_iterator != '0');
+                        
                         const auto numeric_literal_begin = code_iterator;
                         const auto numeric_literal_end   = std::find_if_not(numeric_literal_begin, code_end, lcl::is_valid_mid_character_in_numeric_literal);
 
