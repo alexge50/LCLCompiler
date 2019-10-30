@@ -1,9 +1,9 @@
 #include <cassert>
 
-#include "fmt/core.h"
+#include <fmt/core.h>
 
-#include "tokenizer.hpp"
-#include "std_utils.hpp"
+#include <tokenizer.hpp>
+#include <std_utils.hpp>
 
 using namespace std::string_view_literals;
 
