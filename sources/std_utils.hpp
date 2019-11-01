@@ -5,6 +5,7 @@
 #include <optional>
 #include <type_traits>
 #include <array>
+#include <cassert>
 
 namespace lcl
 {

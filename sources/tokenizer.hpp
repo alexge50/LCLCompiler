@@ -448,6 +448,48 @@ namespace lcl
         {
             return type == lcl::token_type::word && !lcl::is_keyword(code);
         }
+
+        //is_[keyword] methods
+        [[nodiscard]] constexpr auto is_alignof_keyword() const noexcept -> bool { return is_keyword() && code == "alignof"; }
+        [[nodiscard]] constexpr auto is_and_keyword() const noexcept -> bool { return is_keyword() && code == "and"; }
+        [[nodiscard]] constexpr auto is_asm_keyword() const noexcept -> bool { return is_keyword() && code == "asm"; }
+        [[nodiscard]] constexpr auto is_bool_keyword() const noexcept -> bool { return is_keyword() && code == "bool"; }
+        [[nodiscard]] constexpr auto is_break_keyword() const noexcept -> bool { return is_keyword() && code == "break"; }
+        [[nodiscard]] constexpr auto is_case_keyword() const noexcept -> bool { return is_keyword() && code == "case"; }
+        [[nodiscard]] constexpr auto is_catch_keyword() const noexcept -> bool { return is_keyword() && code == "catch"; }
+        [[nodiscard]] constexpr auto is_char_keyword() const noexcept -> bool { return is_keyword() && code == "char"; }
+        [[nodiscard]] constexpr auto is_continue_keyword() const noexcept -> bool { return is_keyword() && code == "continue"; }
+        [[nodiscard]] constexpr auto is_default_keyword() const noexcept -> bool { return is_keyword() && code == "default"; }
+        [[nodiscard]] constexpr auto is_do_keyword() const noexcept -> bool { return is_keyword() && code == "do"; }
+        [[nodiscard]] constexpr auto is_else_keyword() const noexcept -> bool { return is_keyword() && code == "else"; }
+        [[nodiscard]] constexpr auto is_false_keyword() const noexcept -> bool { return is_keyword() && code == "false"; }
+        [[nodiscard]] constexpr auto is_for_keyword() const noexcept -> bool { return is_keyword() && code == "for"; }
+        [[nodiscard]] constexpr auto is_goto_keyword() const noexcept -> bool { return is_keyword() && code == "goto"; }
+        [[nodiscard]] constexpr auto is_if_keyword() const noexcept -> bool { return is_keyword() && code == "if"; }
+        [[nodiscard]] constexpr auto is_import_keyword() const noexcept -> bool { return is_keyword() && code == "import"; }
+        [[nodiscard]] constexpr auto is_inline_keyword() const noexcept -> bool { return is_keyword() && code == "inline"; }
+        [[nodiscard]] constexpr auto is_int_keyword() const noexcept -> bool { return is_keyword() && code == "int"; }
+        [[nodiscard]] constexpr auto is_mut_keyword() const noexcept -> bool { return is_keyword() && code == "mut"; }
+        [[nodiscard]] constexpr auto is_not_keyword() const noexcept -> bool { return is_keyword() && code == "not"; }
+        [[nodiscard]] constexpr auto is_null_keyword() const noexcept -> bool { return is_keyword() && code == "null"; }
+        [[nodiscard]] constexpr auto is_operator_keyword() const noexcept -> bool { return is_keyword() && code == "operator"; }
+        [[nodiscard]] constexpr auto is_or_keyword() const noexcept -> bool { return is_keyword() && code == "or"; }
+        [[nodiscard]] constexpr auto is_private_keyword() const noexcept -> bool { return is_keyword() && code == "private"; }
+        [[nodiscard]] constexpr auto is_public_keyword() const noexcept -> bool { return is_keyword() && code == "public"; }
+        [[nodiscard]] constexpr auto is_return_keyword() const noexcept -> bool { return is_keyword() && code == "return"; }
+        [[nodiscard]] constexpr auto is_sizeof_keyword() const noexcept -> bool { return is_keyword() && code == "sizeof"; }
+        [[nodiscard]] constexpr auto is_struct_keyword() const noexcept -> bool { return is_keyword() && code == "struct"; }
+        [[nodiscard]] constexpr auto is_switch_keyword() const noexcept -> bool { return is_keyword() && code == "switch"; }
+        [[nodiscard]] constexpr auto is_this_keyword() const noexcept -> bool { return is_keyword() && code == "this"; }
+        [[nodiscard]] constexpr auto is_true_keyword() const noexcept -> bool { return is_keyword() && code == "true"; }
+        [[nodiscard]] constexpr auto is_try_keyword() const noexcept -> bool { return is_keyword() && code == "try"; }
+        [[nodiscard]] constexpr auto is_union_keyword() const noexcept -> bool { return is_keyword() && code == "union"; }
+        [[nodiscard]] constexpr auto is_typedef_keyword() const noexcept -> bool { return is_keyword() && code == "typedef"; }
+        [[nodiscard]] constexpr auto is_typename_keyword() const noexcept -> bool { return is_keyword() && code == "typename"; }
+        [[nodiscard]] constexpr auto is_using_keyword() const noexcept -> bool { return is_keyword() && code == "using"; }
+        [[nodiscard]] constexpr auto is_void_keyword() const noexcept -> bool { return is_keyword() && code == "void"; }
+        [[nodiscard]] constexpr auto is_with_keyword() const noexcept -> bool { return is_keyword() && code == "with"; }
+        [[nodiscard]] constexpr auto is_while_keyword() const noexcept -> bool { return is_keyword() && code == "while"; }
     };
 
     [[nodiscard]] constexpr auto is_valid_first_character_in_word(const char32_t it) noexcept -> bool
