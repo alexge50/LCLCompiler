@@ -5,7 +5,13 @@
 #include <optional>
 #include <type_traits>
 #include <array>
-#include <cassert>
+
+#include <gsl/span>
+#include <gsl/gsl_assert>
+
+#ifdef _MSC_VER 
+    #define UNREACHABLE_CODE __assume(false)
+#endif
 
 namespace lcl
 {
@@ -30,31 +36,37 @@ namespace lcl
         return N;
     }
 
-    [[nodiscard]] constexpr auto string_view_slice(const std::string_view::const_iterator begin, const std::size_t length) noexcept -> std::string_view
+    [[nodiscard]] constexpr auto string_view_slice(const std::string_view::const_iterator begin, const std::string_view::size_type length) noexcept -> std::string_view
     {
         return std::string_view { &*begin, length };
     }
 
     [[nodiscard]] constexpr auto string_view_slice(const std::string_view::const_iterator begin, const std::string_view::const_iterator end) noexcept -> std::string_view
     {
-        assert(begin <= end);
+        Expects(begin <= end);
 
-        return std::string_view { &*begin, static_cast<std::size_t>(std::distance(begin, end)) };
+        return std::string_view { &*begin, std::distance(begin, end) };
     }
 
-    [[nodiscard]] constexpr auto string_view_slice(const std::string_view& it, const int end) noexcept -> std::string_view 
+    [[nodiscard]] constexpr auto string_view_slice(const std::string_view& it, const const std::string_view::size_type end) noexcept -> std::string_view 
     {
-        assert(end >= 0 && end < ssize(it));
+        Expects(end >= 0 && end < it.size());
 
-        return std::string_view { &*std::cbegin(it), static_cast<size_t>(end) };
+        return std::string_view { &*std::cbegin(it), end };
     }
 
-    [[nodiscard]] constexpr auto string_view_slice(const std::string_view& it, const int begin, const int end) noexcept -> std::string_view 
+    [[nodiscard]] constexpr auto string_view_slice(const std::string_view& it, const std::string_view::size_type begin, const const std::string_view::size_type end) noexcept -> std::string_view 
     {
-        assert(begin >= 0 && begin < lcl::ssize(it) && end >= 0 && end < lcl::ssize(it));
+        Expects(begin >= 0 && begin < it.size() && end >= 0 && end < it.size());
 
-        return std::string_view { &*std::cbegin(it), static_cast<size_t>(end - begin) };
+        return std::string_view { &*std::cbegin(it), end - begin };
     }
+}
+
+template<class T, class Iterator>
+[[nodiscard]] constexpr auto make_span(const Iterator begin, const Iterator end) noexcept -> gsl::span<T>
+{
+    return gls::make_span(&*begin, std::distance(begin, end));
 }
 
 #endif //LCLCOMPILER_STRING_VIEW_UTILS_HPP

@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include <tl/expected.hpp>
+#include <gsl/gsl_assert>
 
 #include <chars.hpp>
 #include <std_utils.hpp>
@@ -106,8 +107,8 @@ namespace lcl
         hat,                   // ^
         ampersand,             // &
         star,                  // *
-        open_parans,           // (
-        close_parans,          // )
+        open_paren,           // (
+        close_paren,          // )
         minus,                 // -
         plus,                  // +
         equal,                 // =
@@ -200,8 +201,8 @@ namespace lcl
         lcl::token_type::hat,
         lcl::token_type::ampersand,
         lcl::token_type::star,
-        lcl::token_type::open_parans,
-        lcl::token_type::close_parans,
+        lcl::token_type::open_paren,
+        lcl::token_type::close_paren,
         lcl::token_type::minus,
         lcl::token_type::plus,
         lcl::token_type::equal,
@@ -234,8 +235,8 @@ namespace lcl
             case lcl::token_type::hat:
             case lcl::token_type::ampersand:
             case lcl::token_type::star:
-            case lcl::token_type::open_parans:
-            case lcl::token_type::close_parans:
+            case lcl::token_type::open_paren:
+            case lcl::token_type::close_paren:
             case lcl::token_type::minus:
             case lcl::token_type::plus:
             case lcl::token_type::equal:
@@ -299,7 +300,7 @@ namespace lcl
 
     [[nodiscard]] constexpr auto get_single_char_represented_by_token_type(const lcl::token_type it) noexcept -> char
     {
-        assert(is_token_type_representing_a_single_char(it));
+        Expects(is_token_type_representing_a_single_char(it));
 
         switch (it)
         {
@@ -312,8 +313,8 @@ namespace lcl
             case lcl::token_type::hat: return '^';
             case lcl::token_type::ampersand: return '&';
             case lcl::token_type::star: return '*';
-            case lcl::token_type::open_parans: return '(';
-            case lcl::token_type::close_parans: return ')';
+            case lcl::token_type::open_paren: return '(';
+            case lcl::token_type::close_paren: return ')';
             case lcl::token_type::minus: return '-';
             case lcl::token_type::plus: return '+';
             case lcl::token_type::equal: return '=';
@@ -332,14 +333,12 @@ namespace lcl
             case lcl::token_type::backward_slash: return '\\';
         }
 
-        //This case should never be reached
-        assert(false);
-        return '\0';
+        UNREACHABLE_CODE;
     }
 
     [[nodiscard]] constexpr auto get_token_type_that_represents_char(const char it) noexcept -> lcl::token_type
     {
-        assert(is_single_char_represented_by_token_type(it));
+        Expects(is_single_char_represented_by_token_type(it));
 
         switch (it)
         {
@@ -352,8 +351,8 @@ namespace lcl
             case '^' : return lcl::token_type::hat;
             case '&' : return lcl::token_type::ampersand;
             case '*' : return lcl::token_type::star;
-            case '(' : return lcl::token_type::open_parans;
-            case ')' : return lcl::token_type::close_parans;
+            case '(' : return lcl::token_type::open_paren;
+            case ')' : return lcl::token_type::close_paren;
             case '-' : return lcl::token_type::minus;
             case '+' : return lcl::token_type::plus;
             case '=' : return lcl::token_type::equal;
@@ -372,17 +371,16 @@ namespace lcl
             case '\\': return lcl::token_type::backward_slash;
         }
 
-        //Should never be reached
-        assert(false);
-        return static_cast<lcl::token_type>(0);
+        UNREACHABLE_CODE;
     }
 
     struct token
     {
         const lcl::token_type  type;
         const std::string_view code;
+        const int              line;
 
-        constexpr explicit token(const lcl::token_type type, const std::string_view& code_of_token) : type(type), code(code_of_token)
+        constexpr explicit token(const lcl::token_type type, const std::string_view& code, const int line) : type(type), code(code), line(line)
         {
             //Empty
         }
