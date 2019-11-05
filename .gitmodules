@@ -1,0 +1,24 @@
+[submodule "libs/Catch2"]
+	path = libs/Catch2
+	url = https://github.com/catchorg/Catch2
+[submodule "libs/GSL"]
+	path = libs/GSL
+	url = https://github.com/Microsoft/GSL
+[submodule "libs/range-v3"]
+	path = libs/range-v3
+	url = https://github.com/ericniebler/range-v3
+[submodule "libs/expected"]
+	path = libs/expected
+	url = https://github.com/TartanLlama/expected
+[submodule "libs/fmt"]
+	path = libs/fmt
+	url = https://github.com/fmtlib/fmt
+[submodule "libs/magic_enum"]
+	path = libs/magic_enum
+	url = https://github.com/Neargye/magic_enum
+[submodule "libs/utfcpp"]
+	path = libs/utfcpp
+	url = https://github.com/nemtrif/utfcpp
+[submodule "libs/utf8proc"]
+	path = libs/utf8proc
+	url = https://github.com/JuliaStrings/utf8proc
