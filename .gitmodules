@@ -7,9 +7,6 @@
 [submodule "libs/range-v3"]
 	path = libs/range-v3
 	url = https://github.com/ericniebler/range-v3
-[submodule "libs/expected"]
-	path = libs/expected
-	url = https://github.com/TartanLlama/expected
 [submodule "libs/fmt"]
 	path = libs/fmt
 	url = https://github.com/fmtlib/fmt
