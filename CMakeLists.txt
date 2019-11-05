@@ -18,3 +18,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS sources/*)
 add_executable(lcl ${SOURCES})
 target_link_libraries(lcl PRIVATE Catch2 expected fmt GSL magic_enum::magic_enum range-v3 utf8proc utfcpp)
 target_include_directories(lcl PRIVATE sources/)
+
+add_executable(lcl_test_tokenizer tests/test_tokenizer.cpp)
+target_link_libraries(lcl PRIVATE Catch2 expected fmt GSL magic_enum::magic_enum range-v3 utf8proc utfcpp)
+target_include_directories(lcl PRIVATE sources/)
